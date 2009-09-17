@@ -98,15 +98,15 @@ void smithNormalForm(matrix &a, matrix &p, matrix &q) {
 					found = true;
 					//switch column i with column j
 					for(int l = i; l<n; l++) {
-						int t = a.get(i,l);
-						a.get(i,l) = a.get(j,l);
-						a.get(j,l) = t;
+						int t = a.get(l,i);
+						a.get(l,i) = a.get(l,j);
+						a.get(l,j) = t;
 					}
 					//switch row i with row k
 					for(int l = i; l<m; l++) {
-						int t = a.get(l,i);
-						a.get(l,i) = a.get(l,k);
-						a.get(l,k) = t;
+						int t = a.get(i,l);
+						a.get(i,l) = a.get(k,l);
+						a.get(k,l) = t;
 					}
 					brk = true;
 					break;
@@ -177,9 +177,16 @@ void smithNormalForm(matrix &a, matrix &p, matrix &q) {
 	for(int i = 1; i<n && i<m; i++) {
 		for(int j = i; j>0; j--) {
 			if(a.get(j,j) % a.get(j-1,j-1) == 0) break;
-			int t = a.get(j,j);
-			a.get(j,j) = a.get(j-1,j-1);
-			a.get(j-1,j-1) = t;
+			else if(a.get(j-1,j-1) % a.get(j,j) == 0) {
+				int t = a.get(j,j);
+				a.get(j,j) = a.get(j-1,j-1);
+				a.get(j-1,j-1) = t;
+			} else {
+				int q = a.get(j-1,j-1), r = a.get(j,j), x, y;
+				int e = gcd(q,r,x,y);
+				a.get(j-1,j-1) = e;
+				a.get(j,j) = q*r/e;
+			}
 		}
 	}
 }

@@ -122,11 +122,13 @@ void smithNormalForm(matrix &a, matrix &p, matrix &q) {
 			//improve row-wise
 			for(int j = i+1; j<n; j++) {
 				if(a.get(j,i) % a.get(i,i) == 0) {
+					//if divisible, clear it
 					int q = a.get(j,i) / a.get(i,i);
 					for(int k = i; k<m; k++) {
 						a.get(j,k) -= q*a.get(i,k);
 					}
 				} else {
+					//if not divisible, make it divisible and clear it and mark flag to continue computation
 					done = false;
 					int e, x, y, alpha, beta;
 					e = gcd(a.get(i,i),a.get(j,i),x,y);
@@ -146,11 +148,13 @@ void smithNormalForm(matrix &a, matrix &p, matrix &q) {
 			//improve column-wise
 			for(int j = i+1; j<m; j++) {
 				if(a.get(i,j) % a.get(i,i) == 0) {
+					//if divisible, clear it
 					int q = a.get(i,j) / a.get(i,i);
 					for(int k = i; k<n; k++) {
 						a.get(k,j) -= q*a.get(k,i);
 					}
 				} else {
+					//if not divisible, make it divisible and clear it and mark flag to continue computation
 					done = false;
 					int e, x, y, alpha, beta;
 					e = gcd(a.get(i,i),a.get(i,j),x,y);
@@ -169,5 +173,13 @@ void smithNormalForm(matrix &a, matrix &p, matrix &q) {
 			}
 		}
 		if(a.get(i,i) < 0) a.get(i,i) *= -1;
+	}
+	for(int i = 1; i<n && i<m; i++) {
+		for(int j = i; j>0; j--) {
+			if(a.get(j,j) % a.get(j-1,j-1) == 0) break;
+			int t = a.get(j,j);
+			a.get(j,j) = a.get(j-1,j-1);
+			a.get(j-1,j-1) = t;
+		}
 	}
 }

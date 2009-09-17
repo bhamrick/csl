@@ -1,4 +1,5 @@
 #include<matrix.hh>
+#include<bezout.hh>
 
 using namespace std;
 
@@ -57,8 +58,7 @@ int& matrix::get(int i, int j) {
 
 matrix& matrix::operator=(matrix& other) {
 	if(&other == this) return *this;
-	n = other.rows();
-	m = other.cols();
+	setDims(other.n,other.m);
 	for(int i = 0; i<n; i++) {
 		for(int j = 0; j<m; j++) {
 			get(i,j) = other.get(i,j);
@@ -88,4 +88,86 @@ void smithNormalForm(matrix &a, matrix &p, matrix &q) {
 	matrix tp(n,n), tq(m,m);
 	p=tp;
 	q=tq;
+	for(int i = 0; i<n && i<m; i++) {
+		bool found = false;
+		//choose a pivot and move it to a_i,i
+		for(int j = i; j<m; j++) {
+			bool brk = false;
+			for(int k = i; k<n; k++) {
+				if(a.get(k,j) != 0) {
+					found = true;
+					//switch column i with column j
+					for(int l = i; l<n; l++) {
+						int t = a.get(i,l);
+						a.get(i,l) = a.get(j,l);
+						a.get(j,l) = t;
+					}
+					//switch row i with row k
+					for(int l = i; l<m; l++) {
+						int t = a.get(l,i);
+						a.get(l,i) = a.get(l,k);
+						a.get(l,k) = t;
+					}
+					brk = true;
+					break;
+				}
+			}
+			if(brk) break;
+		}
+		if(!found) break;
+		//improve the pivot
+		bool done = false;
+		while(!done) {
+			done = true;
+			//improve row-wise
+			for(int j = i+1; j<n; j++) {
+				if(a.get(j,i) % a.get(i,i) == 0) {
+					int q = a.get(j,i) / a.get(i,i);
+					for(int k = i; k<m; k++) {
+						a.get(j,k) -= q*a.get(i,k);
+					}
+				} else {
+					done = false;
+					int e, x, y, alpha, beta;
+					e = gcd(a.get(i,i),a.get(j,i),x,y);
+					alpha = a.get(i,i)/e;
+					beta = a.get(j,i)/e;
+					for(int k = i; k<m; k++) {
+						int c = a.get(i,k), d = a.get(j,k);
+						a.get(i,k) = c*x + d*y;
+						a.get(j,k) = -c*beta + d*alpha;
+					}
+					int q = a.get(j,i) / a.get(i,i);
+					for(int k = i; k<m; k++) {
+						a.get(j,k) -= q*a.get(i,k);
+					}
+				}
+			}
+			//improve column-wise
+			for(int j = i+1; j<m; j++) {
+				if(a.get(i,j) % a.get(i,i) == 0) {
+					int q = a.get(i,j) / a.get(i,i);
+					for(int k = i; k<n; k++) {
+						a.get(k,j) -= q*a.get(k,i);
+					}
+				} else {
+					done = false;
+					int e, x, y, alpha, beta;
+					e = gcd(a.get(i,i),a.get(i,j),x,y);
+					alpha = a.get(i,i)/e;
+					beta = a.get(i,j)/e;
+					for(int k = i; k<n; k++) {
+						int c = a.get(k,i), d = a.get(k,j);
+						a.get(k,i) = c*x + d*y;
+						a.get(k,j) = -c*beta + d*alpha;
+					}
+					int q = a.get(i,j) / a.get(i,i);
+					for(int k = i; k<n; k++) {
+						a.get(k,j) -= q*a.get(k,i);
+					}
+				}
+			}
+		}
+		if(a.get(i,i) < 0) a.get(i,i) *= -1;
+	}
 }

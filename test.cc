@@ -7,17 +7,14 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-	matrix m(4,4);
-	for(int i = 0; i<4; i++) {
-		for(int j = 0; j<4; j++) {
-			m.get(i,j) = 4*i+j;
-		}
-	}
+	matrix m(2,3), p, q;
+	m.get(0,0) = 8;
+	m.get(0,1) = 4;
+	m.get(0,2) = 8;
+	m.get(1,0) = 4;
+	m.get(1,1) = 8;
+	m.get(1,2) = 4;
 	cout<<m<<endl;
-	while(true) {
-		int a, b, x, y;
-		cin >> a >> b;
-		int g = gcd(a,b,x,y);
-		cout << g << " = " << a << " * " << x << " + " << b << " * " << y << endl;
-	}
+	smithNormalForm(m,p,q);
+	cout<<m<<endl;
 }

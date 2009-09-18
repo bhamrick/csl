@@ -1,5 +1,5 @@
-CCFLAGS=-I. -g
-LDFLAGS=-lm -g
+CCFLAGS=-I. -g 
+LDFLAGS=-lm -g -lgmp
 
 OBJECTS=matrix.o bezout.o
 
@@ -19,3 +19,5 @@ clean:
 	rm -f a.out
 	rm -f test
 	rm -f generate
+	rm -f test.o
+	rm -f generate.o

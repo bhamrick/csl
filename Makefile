@@ -16,6 +16,5 @@ generate: $(OBJECTS) generate.o
 
 clean:
 	rm -f $(OBJECTS)
-	rm -f a.out
-	rm -f test
-	rm -f generate
+	rm -f test test.o
+	rm -f generate generate.o

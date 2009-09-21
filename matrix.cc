@@ -31,6 +31,10 @@ mpz_matrix::mpz_matrix(int n, int m) {
 	mpz_init(zero);
 }
 
+matrix::~matrix() {
+	free(a);
+}
+
 mpz_matrix::~mpz_matrix() {
 	mpz_clear(zero);
 	for(int i = 0; i<n*m; i++) {
@@ -95,9 +99,18 @@ void mpz_matrix::setDims(int n, int m) {
 	}
 	for(int i = 0; i<n; i++) {
 		for(int j = 0; j<m; j++) {
-			if(i < this->n && j < this->m
+			if(i < this->n && j < this->m) {
+				mpz_set(t[i*m+j],a[i*this->m+j]);
+			}
 		}
 	}
+	for(int i = 0; i<this->n*this->m; i++) {
+		mpz_clear(a[i]);
+	}
+	free(a);
+	a = t;
+	this->n = n;
+	this->m = m;
 }
 
 int& matrix::get(int i, int j) {

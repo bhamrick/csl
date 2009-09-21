@@ -4,6 +4,7 @@
 #include<iostream>
 #include<cstdlib>
 #include<cstdio>
+#include<gmp.h>
 
 class matrix {
 	private:
@@ -37,7 +38,7 @@ class mpz_matrix {
 	void setRows(int);
 	void setCols(int);
 	void setDims(int,int);
-	mpz_t get(int,int);
+	mpz_t& get(int,int);
 };
 
 #endif

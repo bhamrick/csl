@@ -3,6 +3,7 @@
 #include<iostream>
 #include<cstdlib>
 #include<cstdio>
+#include<gmp.h>
 
 using namespace std;
 
@@ -10,15 +11,23 @@ int main(int argc, char** argv) {
 	int N, M;
 	FILE *fin = fopen("matrix.in","r");
 	fscanf(fin,"%d%d",&N,&M);
-	matrix m(N,M), p, q;
-	for(int i = 0; i<N; i++) {
-		for(int j = 0; j<M; j++) {
-			int a;
-			fscanf(fin,"%d",&a);
-			m.get(i,j) = a;
-		}
-	}
-	cout<<m<<endl;
-	smithNormalForm(m,p,q);
-	cout<<m<<endl;
+	mpz_t a, b, c, x, y;
+	mpz_init(a);
+	mpz_init(b);
+	mpz_init(c);
+	mpz_init(x);
+	mpz_init(y);
+	char *s = (char*)malloc(1000);
+	scanf("%s",s);
+	mpz_set_str(a,s,10);
+	scanf("%s",s);
+	mpz_set_str(b,s,10);
+	mpz_gcdext(c,x,y,a,b);
+	mpz_out_str(NULL,10,c);
+	printf("\n");
+	mpz_out_str(NULL,10,x);
+	printf(" ");
+	mpz_out_str(NULL,10,y);
+	printf("\n");
+	return 0;
 }

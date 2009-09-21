@@ -9,14 +9,33 @@ matrix::matrix() {
 	a=NULL;
 }
 
+mpz_matrix::mpz_matrix() {
+	n=0;
+	m=0;
+	a=NULL;
+	mpz_init(zero);
+}
+
 matrix::matrix(int n, int m) {
 	this->n = n;
 	this->m = m;
 	a = (int*)malloc(n*m*sizeof(int));
-	for(int i = 0; i<n*m; i++) a[i] = 0;
+	for(int i = 0; i<n*m; i++) a[i]=0;
 }
 
-matrix::~matrix() {
+mpz_matrix::mpz_matrix(int n, int m) {
+	this->n = n;
+	this->m = m;
+	a = (mpz_t*)malloc(n*m*sizeof(mpz_t));
+	for(int i = 0; i<n*m; i++) mpz_init(a[i]);
+	mpz_init(zero);
+}
+
+mpz_matrix::~mpz_matrix() {
+	mpz_clear(zero);
+	for(int i = 0; i<n*m; i++) {
+		mpz_clear(a[i]);
+	}
 	free(a);
 }
 
@@ -24,7 +43,15 @@ int matrix::rows() {
 	return n;
 }
 
+int mpz_matrix::rows() {
+	return n;
+}
+
 int matrix::cols() {
+	return m;
+}
+
+int mpz_matrix::cols() {
 	return m;
 }
 
@@ -32,7 +59,15 @@ void matrix::setRows(int n) {
 	setDims(n,m);
 }
 
+void mpz_matrix::setRows(int n) {
+	setDims(n,m);
+}
+
 void matrix::setCols(int m) {
+	setDims(n,m);
+}
+
+void mpz_matrix::setCols(int m) {
 	setDims(n,m);
 }
 
@@ -49,6 +84,20 @@ void matrix::setDims(int n, int m) {
 	}
 	free(a);
 	a = t;
+	this->n = n;
+	this->m = m;
+}
+
+void mpz_matrix::setDims(int n, int m) {
+	mpz_t *t = (mpz_t*)malloc(n*m*sizeof(mpz_t));
+	for(int i = 0; i<n*m; i++) {
+		mpz_init(t[i]);
+	}
+	for(int i = 0; i<n; i++) {
+		for(int j = 0; j<m; j++) {
+			if(i < this->n && j < this->m
+		}
+	}
 }
 
 int& matrix::get(int i, int j) {

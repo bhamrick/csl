@@ -49,6 +49,8 @@ void matrix::setDims(int n, int m) {
 	}
 	free(a);
 	a = t;
+	this->n = n;
+	this->m = m;
 }
 
 int& matrix::get(int i, int j) {

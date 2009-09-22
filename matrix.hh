@@ -22,9 +22,6 @@ class matrix {
 	matrix& operator=(matrix&);
 };
 
-std::ostream& operator<<(std::ostream&,matrix&);
-void smithNormalForm(matrix&, matrix&, matrix&);
-
 class mpz_matrix {
 	private:
 	mpz_t *a, zero;
@@ -39,6 +36,11 @@ class mpz_matrix {
 	void setCols(int);
 	void setDims(int,int);
 	mpz_t& get(int,int);
+	mpz_matrix& operator=(mpz_matrix&);
 };
+
+std::ostream& operator<<(std::ostream&,matrix&);
+void smithNormalForm(matrix&, matrix&, matrix&);
+void smithNormalForm(mpz_matrix&,mpz_matrix&,mpz_matrix&);
 
 #endif

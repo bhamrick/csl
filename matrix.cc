@@ -118,12 +118,28 @@ int& matrix::get(int i, int j) {
 	return *(a+(i*m+j));
 }
 
+mpz_t& mpz_matrix::get(int i, int j) {
+	if(i < 0 || i >= n || j < 0 || j >= m) return zero;
+	return *(a+(i*m+j));
+}
+
 matrix& matrix::operator=(matrix& other) {
 	if(&other == this) return *this;
 	setDims(other.n,other.m);
 	for(int i = 0; i<n; i++) {
 		for(int j = 0; j<m; j++) {
 			get(i,j) = other.get(i,j);
+		}
+	}
+	return *this;
+}
+
+mpz_matrix& mpz_matrix::operator=(mpz_matrix& other) {
+	if(&other == this) return *this;
+	setDims(other.n,other.m);
+	for(int i = 0; i<n; i++) {
+		for(int j = 0; j<m; j++) {
+			mpz_set(get(i,j),other.get(i,j));
 		}
 	}
 	return *this;
@@ -145,11 +161,11 @@ ostream& operator<<(ostream& out, matrix& m) {
 	return out;
 }
 
-void smithNormalForm(matrix &a, matrix &p, matrix &q) {
+void smithNormalForm(matrix &a, matrix &mp, matrix &mq) {
 	int n = a.rows(), m = a.cols();
 	matrix tp(n,n), tq(m,m);
-	p=tp;
-	q=tq;
+	mp=tp;
+	mq=tq;
 	for(int i = 0; i<n && i<m; i++) {
 		bool found = false;
 		//choose a pivot and move it to a_i,i
@@ -251,4 +267,131 @@ void smithNormalForm(matrix &a, matrix &p, matrix &q) {
 			}
 		}
 	}
+}
+
+void smithNormalForm(mpz_matrix &a, mpz_matrix &mp, mpz_matrix &mq) {
+	int n = a.rows(), m = a.cols();
+	mpz_matrix tp(n,n), tq(m,m);
+	mp=tp;
+	mq=tq;
+	mpz_t q, e, x, y, alpha, beta, c, d, r;
+	mpz_init(q);
+	mpz_init(e);
+	mpz_init(x);
+	mpz_init(y);
+	mpz_init(alpha);
+	mpz_init(beta);
+	mpz_init(c);
+	mpz_init(d);
+	mpz_init(r);
+	for(int i = 0; i<n && i<m; i++) {
+		bool found = false;
+		//choose a pivot and move it to a_i,i
+		for(int j = i; j<m; j++) {
+			bool brk = false;
+			for(int k = i; k<n; k++) {
+				if(mpz_sgn(a.get(k,j)) != 0) {
+					found = true;
+					//switch column i with column j
+					for(int l = i; l<n; l++) {
+						mpz_swap(a.get(l,i),a.get(l,j));
+					}
+					//switch row i with row k
+					for(int l = i; l<m; l++) {
+						mpz_swap(a.get(i,l),a.get(k,l));
+					}
+					brk = true;
+					break;
+				}
+			}
+			if(brk) break;
+		}
+		if(!found) break;
+		//improve the pivot
+		bool done = false;
+		while(!done) {
+			done = true;
+			//improve row-wise
+			for(int j = i+1; j<n; j++) {
+				if(mpz_divisible_p(a.get(j,i),a.get(i,i))) {
+					//if divisible, clear it
+					mpz_divexact(q,a.get(j,i),a.get(i,i));
+					for(int k = i; k<m; k++) {
+						mpz_submul(a.get(j,k),q,a.get(i,k));
+					}
+				} else {
+					//if not divisible, make it divisible and clear it and mark flag to continue computation
+					done = false;
+					mpz_gcdext(e,x,y,a.get(i,i),a.get(j,i));
+					mpz_divexact(alpha,a.get(i,i),e);
+					mpz_divexact(alpha,a.get(j,i),e);
+					for(int k = i; k<m; k++) {
+						mpz_set(c,a.get(i,k));
+						mpz_set(d,a.get(j,k));
+						mpz_mul(a.get(i,k),c,x);
+						mpz_addmul(a.get(i,k),d,y);
+						mpz_mul(a.get(j,k),d,alpha);
+						mpz_submul(a.get(j,k),c,beta);
+					}
+					mpz_divexact(q,a.get(j,i),a.get(i,i));
+					for(int k = i; k<m; k++) {
+						mpz_submul(a.get(j,k),q,a.get(i,k));
+					}
+				}
+			}
+			//improve column-wise
+			for(int j = i+1; j<m; j++) {
+				if(mpz_divisible_p(a.get(i,j),a.get(i,i))) {
+					//if divisible, clear it
+					mpz_divexact(q,a.get(i,j),a.get(i,i));
+					for(int k = i; k<n; k++) {
+						mpz_submul(a.get(k,j),q,a.get(k,i));
+					}
+				} else {
+					//if not divisible, make it divisible and clear it and mark flag to continue computation
+					done = false;
+					mpz_gcdext(e,x,y,a.get(i,i),a.get(i,j));
+					mpz_divexact(alpha,a.get(i,i),e);
+					mpz_divexact(beta,a.get(i,j),e);
+					for(int k = i; k<n; k++) {
+						mpz_set(c,a.get(k,i));
+						mpz_set(d,a.get(k,j));
+						mpz_mul(a.get(k,i),c,x);
+						mpz_addmul(a.get(k,i),d,y);
+						mpz_mul(a.get(k,j),d,alpha);
+						mpz_submul(a.get(k,j),c,beta);
+					}
+					mpz_divexact(q,a.get(i,j),a.get(i,i));
+					for(int k = i; k<n; k++) {
+						mpz_submul(a.get(k,j),q,a.get(k,i));
+					}
+				}
+			}
+		}
+		if(mpz_sgn(a.get(i,i)) < 0) mpz_neg(a.get(i,i),a.get(i,i));
+	}
+	for(int i = 1; i<n && i<m; i++) {
+		for(int j = i; j>0; j--) {
+			if(mpz_divisible_p(a.get(j,j),a.get(j-1,j-1))) break;
+			else if(mpz_divisible_p(a.get(j-1,j-1),a.get(j,j))) {
+				mpz_swap(a.get(j,j),a.get(j-1,j-1));
+			} else {
+				mpz_set(q,a.get(j-1,j-1));
+				mpz_set(r,a.get(j,j));
+				mpz_gcd(e,q,r);
+				mpz_set(a.get(j-1,j-1),e);
+				mpz_mul(a.get(j,j),q,r);
+				mpz_divexact(a.get(j,j),a.get(j,j),e);
+			}
+		}
+	}
+	mpz_clear(q);
+	mpz_clear(e);
+	mpz_clear(x);
+	mpz_clear(y);
+	mpz_clear(alpha);
+	mpz_clear(beta);
+	mpz_clear(c);
+	mpz_clear(d);
+	mpz_clear(r);
 }

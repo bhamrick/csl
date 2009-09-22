@@ -37,6 +37,7 @@ class mpz_matrix {
 	void setDims(int,int);
 	mpz_t& get(int,int);
 	mpz_matrix& operator=(mpz_matrix&);
+	void write(FILE*);
 };
 
 std::ostream& operator<<(std::ostream&,matrix&);

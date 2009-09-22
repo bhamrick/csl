@@ -11,23 +11,19 @@ int main(int argc, char** argv) {
 	int N, M;
 	FILE *fin = fopen("matrix.in","r");
 	fscanf(fin,"%d%d",&N,&M);
-	mpz_t a, b, c, x, y;
-	mpz_init(a);
-	mpz_init(b);
-	mpz_init(c);
-	mpz_init(x);
-	mpz_init(y);
-	char *s = (char*)malloc(1000);
-	scanf("%s",s);
-	mpz_set_str(a,s,10);
-	scanf("%s",s);
-	mpz_set_str(b,s,10);
-	mpz_gcdext(c,x,y,a,b);
-	mpz_out_str(NULL,10,c);
-	printf("\n");
-	mpz_out_str(NULL,10,x);
-	printf(" ");
-	mpz_out_str(NULL,10,y);
-	printf("\n");
+	mpz_matrix m(N,M), p, q;
+	matrix m2(N,M), p2, q2;
+	for(int i = 0; i<N; i++) {
+		for(int j = 0; j<M; j++) {
+			mpz_inp_str(m.get(i,j),fin,10);
+			m2.get(i,j) = mpz_get_si(m.get(i,j));
+		}
+	}
+	m.write(NULL);
+	smithNormalForm(m,p,q);
+	smithNormalForm(m2,p2,q2);
+	for(int i = 0; i<m.rows() && i < m.cols(); i++) {
+		gmp_printf("%Zd\t%d\n",m.get(i,i),m2.get(i,i));
+	}
 	return 0;
 }

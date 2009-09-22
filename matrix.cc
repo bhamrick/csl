@@ -161,6 +161,25 @@ ostream& operator<<(ostream& out, matrix& m) {
 	return out;
 }
 
+void mpz_matrix::write(FILE* fout) {
+	if(fout==NULL) fout = stdout;
+	fprintf(fout,"\n");
+	int width = 0;
+	for(int i = 0; i<n; i++) {
+		for(int j = 0; j<m; j++) {
+			int size = (int)mpz_sizeinbase(get(i,j),10);
+			if(size > width) width = size;
+		}
+	}
+	width+=2;
+	for(int i = 0; i<n; i++) {
+		for(int j = 0; j<m; j++) {
+			gmp_fprintf(fout,"%*Zd",width,get(i,j));
+		}
+		gmp_fprintf(fout,"\n");
+	}
+}
+
 void smithNormalForm(matrix &a, matrix &mp, matrix &mq) {
 	int n = a.rows(), m = a.cols();
 	matrix tp(n,n), tq(m,m);

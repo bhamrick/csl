@@ -343,7 +343,7 @@ void smithNormalForm(mpz_matrix &a, mpz_matrix &mp, mpz_matrix &mq) {
 					done = false;
 					mpz_gcdext(e,x,y,a.get(i,i),a.get(j,i));
 					mpz_divexact(alpha,a.get(i,i),e);
-					mpz_divexact(alpha,a.get(j,i),e);
+					mpz_divexact(beta,a.get(j,i),e);
 					for(int k = i; k<m; k++) {
 						mpz_set(c,a.get(i,k));
 						mpz_set(d,a.get(j,k));

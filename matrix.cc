@@ -90,8 +90,6 @@ void matrix::setDims(int n, int m) {
 	a = t;
 	this->n = n;
 	this->m = m;
-<<<<<<< HEAD:matrix.cc
-=======
 }
 
 void mpz_matrix::setDims(int n, int m) {
@@ -113,7 +111,6 @@ void mpz_matrix::setDims(int n, int m) {
 	a = t;
 	this->n = n;
 	this->m = m;
->>>>>>> gmp:matrix.cc
 }
 
 int& matrix::get(int i, int j) {

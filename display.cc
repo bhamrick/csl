@@ -1,15 +1,20 @@
 #include<simplex.hh>
 #include<GL/glut.h>
 
+#define GLUT_WHEEL_UP 3
+#define GLUT_WHEEL_DOWN 4
+
 using namespace std;
 
 scomplex com;
-double alpha = 0, beta = 0;
+bool dragging;
+int dragx, dragy;
+double alpha = 0, beta = 0, s=1;
+double centerx=0.0, centery=0.0, centerz=0.0;
 
 void displayFunc(int value) {
-	alpha+=0.4;
-	beta +=0.2;
 	glLoadIdentity();
+	gluPerspective(0,1,0.01,100.0);
 	glBegin(GL_QUADS);
 	glColor3d(1.0,1.0,1.0);
 	glVertex2d(-1.0, 1.0);
@@ -17,6 +22,7 @@ void displayFunc(int value) {
 	glVertex2d( 1.0,-1.0);
 	glVertex2d(-1.0,-1.0);
 	glEnd();
+	glScalef(s,s,s);
 	glRotatef(alpha,0.0f,1.0f,0.0f);
 	glRotatef(beta,1.0f,0.0f,0.0f);
 	glBegin(GL_LINES);
@@ -35,6 +41,30 @@ void displayFunc(int value) {
 	glutTimerFunc(1000/60,displayFunc,0);
 }
 
+void initDragFunc(int button, int state, int x, int y) {
+	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+		dragging = true;
+		dragx = x;
+		dragy = y;
+	} else {
+		if(button == GLUT_WHEEL_UP) {
+			s += 0.1;
+		} else if(button == GLUT_WHEEL_DOWN) {
+			s -= 0.1;
+		}
+		dragging = false;
+	}
+}
+
+void dragFunc(int x, int y) {
+	if(dragging) {
+		alpha += 1*(x-dragx);
+		beta += 1*(y-dragy);
+		dragx = x;
+		dragy = y;
+	}
+}
+
 int main(int argc, char** argv) {
 	glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -50,10 +80,22 @@ int main(int argc, char** argv) {
 	fscanf(fin,"%d",&com.dim);
 	int n;
 	fscanf(fin,"%d",&n);
+	centerx=centery=centerz=0.0;
 	for(int i = 0; i<n; i++) {
 		p = new point();
 		fscanf(fin,"%lf%lf%lf",&(p->x),&(p->y),&(p->z));
+		centerx+=p->x;
+		centery+=p->y;
+		centerz+=p->z;
 		com.points.push_back(p);
+	}
+	centerx/=n;
+	centery/=n;
+	centerz/=n;
+	for(int i = 0; i<n; i++) {
+		com.points[i]->x-=centerx;
+		com.points[i]->y-=centery;
+		com.points[i]->z-=centerz;
 	}
 	for(int d = 1; d<=com.dim; d++) {
 		fscanf(fin,"%d",&n);
@@ -70,5 +112,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	glutTimerFunc(1000/60,displayFunc,0);
+	glutMouseFunc(initDragFunc);
+	glutMotionFunc(dragFunc);
 	glutMainLoop();
 }

@@ -12,26 +12,43 @@ int dragx, dragy;
 double alpha = 0, beta = 0, s=1;
 double centerx=0.0, centery=0.0, centerz=0.0;
 
+struct color {
+	double r, g, b;
+} *colors;
+
 void displayFunc(int value) {
 	glLoadIdentity();
-	gluPerspective(0,1,0.01,100.0);
+	glOrtho(-1.0,1.0,-1.0,1.0,-1.0,1.0);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);
 	glBegin(GL_QUADS);
 	glColor3d(1.0,1.0,1.0);
-	glVertex2d(-1.0, 1.0);
-	glVertex2d( 1.0, 1.0);
-	glVertex2d( 1.0,-1.0);
-	glVertex2d(-1.0,-1.0);
+	glVertex3d(-1.0, 1.0,-1.0);
+	glVertex3d( 1.0, 1.0,-1.0);
+	glVertex3d( 1.0,-1.0,-1.0);
+	glVertex3d(-1.0,-1.0,-1.0);
 	glEnd();
+	glFlush();
+	glDepthFunc(GL_LESS);
 	glScalef(s,s,s);
 	glRotatef(alpha,0.0f,1.0f,0.0f);
 	glRotatef(beta,1.0f,0.0f,0.0f);
 	glBegin(GL_LINES);
 	glColor3d(0.0,0.0,0.0);
 	for(int i = 0; i<com.simplices.size(); i++) {
-		for(int j = 0; j<com.simplices[i]->verts.size(); j++) {
-			for(int k = j+1; k<com.simplices[i]->verts.size(); k++) {
+		if(com.simplices[i]->dim == 1) {
+			for(int j = 0; j<2; j++) {
 				glVertex3d(com.points[com.simplices[i]->verts[j]]->x,com.points[com.simplices[i]->verts[j]]->y,com.points[com.simplices[i]->verts[j]]->z);
-				glVertex3d(com.points[com.simplices[i]->verts[k]]->x,com.points[com.simplices[i]->verts[k]]->y,com.points[com.simplices[i]->verts[k]]->z);
+			}
+		}
+	}
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	for(int i = 0; i<com.simplices.size(); i++) {
+		glColor3d(colors[i].r,colors[i].g,colors[i].b);
+		if(com.simplices[i]->dim == 2) {
+			for(int j = 0; j<3; j++) {
+				glVertex3d(com.points[com.simplices[i]->verts[j]]->x,com.points[com.simplices[i]->verts[j]]->y,com.points[com.simplices[i]->verts[j]]->z);
 			}
 		}
 	}
@@ -67,7 +84,7 @@ void dragFunc(int x, int y) {
 
 int main(int argc, char** argv) {
 	glutInit(&argc,argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(200,200);
 	glutCreateWindow("Simplicial Complex Visualization");
 	if(argc < 2) {
@@ -78,7 +95,7 @@ int main(int argc, char** argv) {
 	simplex *s;
 	point *p;
 	fscanf(fin,"%d",&com.dim);
-	int n;
+	int n, tot=0;
 	fscanf(fin,"%d",&n);
 	centerx=centery=centerz=0.0;
 	for(int i = 0; i<n; i++) {
@@ -92,6 +109,7 @@ int main(int argc, char** argv) {
 	centerx/=n;
 	centery/=n;
 	centerz/=n;
+	tot+=n;
 	for(int i = 0; i<n; i++) {
 		com.points[i]->x-=centerx;
 		com.points[i]->y-=centery;
@@ -99,6 +117,7 @@ int main(int argc, char** argv) {
 	}
 	for(int d = 1; d<=com.dim; d++) {
 		fscanf(fin,"%d",&n);
+		tot+=n;
 		for(int i = 0; i<n; i++) {
 			s = new simplex();
 			s->dim = d;
@@ -110,6 +129,12 @@ int main(int argc, char** argv) {
 			sort(s->verts.begin(),s->verts.end());
 			com.simplices.push_back(s);
 		}
+	}
+	colors = new color[tot];
+	for(int i = 0; i<tot; i++) {
+		colors[i].r = (double)rand()/RAND_MAX;
+		colors[i].g = (double)rand()/RAND_MAX;
+		colors[i].b = (double)rand()/RAND_MAX;
 	}
 	glutTimerFunc(1000/60,displayFunc,0);
 	glutMouseFunc(initDragFunc);

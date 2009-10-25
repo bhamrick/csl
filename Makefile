@@ -1,5 +1,5 @@
-CCFLAGS=-I. -g -O2
-LDFLAGS=-lm -g -lgmp -lglut -lGLU -lGLU -lXmu -lXext -lXi -lX11 -O2
+CCFLAGS=-I. -g
+LDFLAGS=-lm -g -lgmp -lglut -lGLU -lGLU -lXmu -lXext -lXi -lX11
 
 OBJECTS=matrix.o bezout.o
 

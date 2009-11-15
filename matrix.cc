@@ -185,6 +185,12 @@ void smithNormalForm(matrix &a, matrix &mp, matrix &mq) {
 	matrix tp(n,n), tq(m,m);
 	mp=tp;
 	mq=tq;
+	for(int i = 0; i<n; i++) {
+		mp.get(i,i) = 1;
+	}
+	for(int i = 0; i<m; i++) {
+		mq.get(i,i) = 1;
+	}
 	for(int i = 0; i<n && i<m; i++) {
 		bool found = false;
 		//choose a pivot and move it to a_i,i
@@ -199,11 +205,21 @@ void smithNormalForm(matrix &a, matrix &mp, matrix &mq) {
 						a.get(l,i) = a.get(l,j);
 						a.get(l,j) = t;
 					}
+					for(int l = 0; l<n; l++) {	
+						int t = mq.get(l,i);
+						mq.get(l,i) = mq.get(l,j);
+						mq.get(l,j) = t;
+					}
 					//switch row i with row k
 					for(int l = i; l<m; l++) {
 						int t = a.get(i,l);
 						a.get(i,l) = a.get(k,l);
 						a.get(k,l) = t;
+					}
+					for(int l = 0; l<m; l++) {
+						int t = mp.get(i,l);
+						mp.get(i,l) = mp.get(k,l);
+						mp.get(k,l) = t;
 					}
 					brk = true;
 					break;
@@ -224,6 +240,9 @@ void smithNormalForm(matrix &a, matrix &mp, matrix &mq) {
 					for(int k = i; k<m; k++) {
 						a.get(j,k) -= q*a.get(i,k);
 					}
+					for(int k = 0; k<m; k++) {
+						mp.get(j,k) -= q*mp.get(i,k);
+					}
 				} else {
 					//if not divisible, make it divisible and clear it and mark flag to continue computation
 					done = false;
@@ -231,14 +250,22 @@ void smithNormalForm(matrix &a, matrix &mp, matrix &mq) {
 					e = gcd(a.get(i,i),a.get(j,i),x,y);
 					alpha = a.get(i,i)/e;
 					beta = a.get(j,i)/e;
-					for(int k = i; k<m; k++) {
+					for(int k = 0; k<m; k++) {
 						int c = a.get(i,k), d = a.get(j,k);
 						a.get(i,k) = c*x + d*y;
 						a.get(j,k) = -c*beta + d*alpha;
 					}
+					for(int k = 0; k<m; k++) {
+						int c = mp.get(i,k), d = mp.get(j,k);
+						mp.get(i,k) = c*x + d*y;
+						mp.get(j,k) = -c*beta + d*alpha;
+					}
 					int q = a.get(j,i) / a.get(i,i);
-					for(int k = i; k<m; k++) {
+					for(int k = 0; k<m; k++) {
 						a.get(j,k) -= q*a.get(i,k);
+					}
+					for(int k = 0; k<m; k++) {
+						mp.get(j,k) -= q*mp.get(i,k);
 					}
 				}
 			}
@@ -247,8 +274,11 @@ void smithNormalForm(matrix &a, matrix &mp, matrix &mq) {
 				if(a.get(i,j) % a.get(i,i) == 0) {
 					//if divisible, clear it
 					int q = a.get(i,j) / a.get(i,i);
-					for(int k = i; k<n; k++) {
+					for(int k = 0; k<n; k++) {
 						a.get(k,j) -= q*a.get(k,i);
+					}
+					for(int k = 0; k<n; k++) {
+						mq.get(k,j) -= q*mq.get(k,i);
 					}
 				} else {
 					//if not divisible, make it divisible and clear it and mark flag to continue computation
@@ -257,33 +287,71 @@ void smithNormalForm(matrix &a, matrix &mp, matrix &mq) {
 					e = gcd(a.get(i,i),a.get(i,j),x,y);
 					alpha = a.get(i,i)/e;
 					beta = a.get(i,j)/e;
-					for(int k = i; k<n; k++) {
+					for(int k = 0; k<n; k++) {
 						int c = a.get(k,i), d = a.get(k,j);
 						a.get(k,i) = c*x + d*y;
 						a.get(k,j) = -c*beta + d*alpha;
 					}
+					for(int k = 0; k<n; k++) {
+						int c = mq.get(k,i), d = mq.get(k,j);
+						mq.get(k,i) = c*x + d*y;
+						mq.get(k,j) = -c*beta + d*alpha;
+					}
 					int q = a.get(i,j) / a.get(i,i);
-					for(int k = i; k<n; k++) {
+					for(int k = 0; k<n; k++) {
 						a.get(k,j) -= q*a.get(k,i);
+					}
+					for(int k = 0; k<n; k++) {
+						mq.get(k,j) -= q*mq.get(k,i);
 					}
 				}
 			}
 		}
-		if(a.get(i,i) < 0) a.get(i,i) *= -1;
+		if(a.get(i,i) < 0) {
+			a.get(i,i) *= -1;
+			for(int k = 0; k<n; k++) {
+				mq.get(k,i) *= -1;
+			}
+		}
+		cout << "a" << endl << a << endl << "mp" << endl << mp << endl << "mq" << endl << mq << endl << endl;
 	}
 	for(int i = 1; i<n && i<m; i++) {
 		for(int j = i; j>0; j--) {
+			cout << "a" << endl << a << endl << "mp" << endl << mp << endl << "mq" << endl << mq << endl << endl;
 			if(a.get(j,j) % a.get(j-1,j-1) == 0) break;
 			else if(a.get(j-1,j-1) % a.get(j,j) == 0) {
 				int t = a.get(j,j);
 				a.get(j,j) = a.get(j-1,j-1);
 				a.get(j-1,j-1) = t;
+				for(int k = 0; k<m; k++) {
+					t = mp.get(j-1,k);
+					mp.get(j-1,k) = mp.get(j,k);
+					mp.get(j,k) = t;
+				}
+				for(int k = 0; k<n; k++) {
+					t = mq.get(k,j-1);
+					mq.get(k,j-1) = mq.get(k,j);
+					mq.get(k,j) = t;
+				}
 			} else {
 				int q = a.get(j-1,j-1), r = a.get(j,j), x, y;
 				int e = gcd(q,r,x,y);
+				int alpha = q/e, beta = r/e;
 				a.get(j-1,j-1) = e;
 				a.get(j,j) = q*r/e;
+				for(int k = 0; k<m; k++) {
+					mp.get(j-1,k) += mp.get(j,k);	
+				}
+				for(int k = 0; k<m; k++) {
+					mp.get(j,k) -= beta*y*mp.get(j-1,k);
+				}
+				for(int k = 0; k<n; k++) {
+					int c = mq.get(k,j-1), d = mq.get(k,j);
+					mq.get(k,j-1) = c*x + d*y;
+					mq.get(k,j) = -c*beta + d*alpha;
+				}
 			}
+//			cout << "a" << endl << a << endl << "mp" << endl << mp << endl << "mq" << endl << mq << endl << endl;
 		}
 	}
 }

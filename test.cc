@@ -11,16 +11,18 @@ int main(int argc, char** argv) {
 	int N, M;
 	FILE *fin = fopen("matrix.in","r");
 	fscanf(fin,"%d%d",&N,&M);
-	mpz_matrix m(N,M), p, q;
+	matrix m(N,M), p, q;
 	for(int i = 0; i<N; i++) {
 		for(int j = 0; j<M; j++) {
-			mpz_inp_str(m.get(i,j),fin,10);
+			fscanf(fin,"%d",&m.get(i,j));
 		}
 	}
-	m.write(NULL);
+	cout << m << endl;
 	smithNormalForm(m,p,q);
 	for(int i = 0; i<m.rows() && i < m.cols(); i++) {
-		gmp_printf("%Zd\n",m.get(i,i));
+		printf("%d\n",m.get(i,i));
 	}
+	cout << p << endl;
+	cout << q << endl;
 	return 0;
 }

@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 	point *p;
 	fscanf(fin,"%d",&com.dim);
 	if(com.dim != 2) {
-		printf("Error: %s is only for surfaces embedded in R3\n");
+		printf("Error: %s is only for surfaces embedded in R3\n",argv[0]);
 		return 1;
 	}
 	int n[3], tot=0;

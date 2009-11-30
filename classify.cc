@@ -87,29 +87,33 @@ int main(int argc, char** argv) {
 //End computation of incidences
 //Begin computation of orientability
 	queue< pair<int,int> > q;
-	q.push(make_pair(0,0));
-	vis[0][0]=true;
+	q.push(make_pair(n[1],0));
+	vis[0][n[1]]=true;
 	while(!q.empty()) {
 		pair<int,int> p = q.front();
 		q.pop();
 		printf("%d %d\n",p.first,p.second);
 		if(com.simplices[p.first]->dim == 2) {
 			for(int i = 0; i<incidences[p.first].size(); i++) {
+				int eid;
+				bool orient;
 				if(!vis[incidences[p.first][i].second ^ p.second ^ 1][incidences[p.first][i].first]) {
-					q.push(make_pair(incidences[p.first][i].first,incidences[p.first][i].second ^ p.second ^ 1));
-					vis[incidences[p.first][i].second ^ p.second ^ 1][incidences[p.first][i].first]	= true;
+					eid = incidences[p.first][i].first;
+					orient = incidences[p.first][i].second ^ p.second ^ 1;
 				}
-			}
-		} else {
-			for(int i = 0; i<incidences[p.first].size(); i++) {
-				if(!vis[incidences[p.first][i].second ^ p.second][incidences[p.first][i].first]) {
-					q.push(make_pair(incidences[p.first][i].first,incidences[p.first][i].second ^ p.second));
-					vis[incidences[p.first][i].second][incidences[p.first][i].first]=1;
+//				printf("%d %d\n",eid,orient);
+				for(int j = 0; j<incidences[eid].size(); j++) {
+					if(incidences[eid][j].first != p.first) {
+						if(!vis[incidences[eid][j].second ^ orient][incidences[eid][j].first]) {
+							vis[incidences[eid][j].second ^ orient][incidences[eid][j].first] = true;
+							q.push(make_pair(incidences[eid][j].first,incidences[eid][j].second ^ orient));
+						}
+					}
 				}
 			}
 		}
 	}
-	printf("%s\n",vis[1][0] ? "Non-orientable" : "Orientable");
+	printf("%s\n",vis[1][n[1]] ? "Non-orientable" : "Orientable");
 //End computation of orientability
 	return 0;
 }

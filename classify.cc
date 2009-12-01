@@ -114,6 +114,14 @@ int main(int argc, char** argv) {
 		}
 	}
 	printf("%s\n",vis[1][n[1]] ? "Non-orientable" : "Orientable");
+	bool orientable = !vis[1][n[1]];
 //End computation of orientability
+	int chi = n[0] - n[1] + n[2]; // Euler Characteristic
+	printf("Euler Characteristic: %d\n",chi);
+	if(orientable) {
+		printf("Surface is a sphere with %d handles\n",(2-chi)/2);
+	} else {
+		printf("Surface is a sphere with %d crosscaps\n",2-chi);
+	}
 	return 0;
 }

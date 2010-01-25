@@ -3,7 +3,7 @@ LDFLAGS=-lm -g -lgmp -lglut -lGLU -lGLU -lXmu -lXext -lXi -lX11
 
 OBJECTS=matrix.o bezout.o
 
-all: test generate benchmark display surfacehom classify
+all: test generate benchmark display surfacehom classify onedim
 
 test: $(OBJECTS) test.o
 	g++ -o test $(LDFLAGS) $(OBJECTS) test.o
@@ -23,6 +23,9 @@ surfacehom: surfacehom.o
 classify: classify.o
 	g++ -o classify $(LDFLAGS) classify.o
 
+onedim: onedim.o
+	g++ -o onedim $(LDFLAGS) onedim.o
+
 %.o: %.cc
 	g++ $(CCFLAGS) $< -c
 
@@ -34,3 +37,4 @@ clean:
 	rm -f display display.o
 	rm -f surfacehom surfacehom.o
 	rm -f classify classify.o
+	rm -f onedim onedim.o

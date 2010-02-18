@@ -1,9 +1,9 @@
 CCFLAGS=-I. -g
-LDFLAGS=-lm -g -lgmp -lglut -lGLU -lGLU -lXmu -lXext -lXi -lX11
+LDFLAGS=-lm -g -lgmp -lglut -lGLU -lGLU -lXmu -lXext -lXi -lX11 -lcurses
 
 OBJECTS=matrix.o bezout.o
 
-all: test generate benchmark display surfacehom classify onedim
+all: test generate benchmark display surfacehom classify onedim increment
 
 test: $(OBJECTS) test.o
 	g++ -o test $(LDFLAGS) $(OBJECTS) test.o
@@ -26,6 +26,9 @@ classify: classify.o
 onedim: onedim.o
 	g++ -o onedim $(LDFLAGS) onedim.o
 
+increment: increment.o
+	g++ -o increment $(LDFLAGS) increment.o
+
 %.o: %.cc
 	g++ $(CCFLAGS) $< -c
 
@@ -38,3 +41,4 @@ clean:
 	rm -f surfacehom surfacehom.o
 	rm -f classify classify.o
 	rm -f onedim onedim.o
+	rm -f increment increment.o

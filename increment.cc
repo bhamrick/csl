@@ -199,6 +199,38 @@ int main(int argc, char** argv) {
 				}
 			} else if(d == 2) { // 2-simplex
 				// detect cycle
+				bool iscycle = true;
+				int vis[N[2]];
+				queue<int> q;
+				vector<int> cyc;
+				q.push(id);
+				while(!q.empty() && iscycle) {
+					int sim = q.front();
+					q.pop();
+					bool neg = sim < 0;
+					if(neg) sim = ~sim;
+					if((vis[sim] == 1 && neg) || (vis[sim]==-1 && !neg)) {
+						iscycle = false;
+						break;
+					}
+					if(vis[sim]) continue;
+					vis[sim] = neg ? -1 : 1;
+					cyc.push_back(sim);
+					for(int i = 0; i<boundary[sim].size(); i++) {
+						int bsim = boundary[id][i];
+						bool bneg = bsim < 0;
+						if(bneg) bsim = ~bsim;
+						if(coboundary[bsim].size() < 2) {
+							iscycle = false;
+							break;
+						} else {
+							int osim = coboundary[bsim][0];
+							if(osim == sim || osim == ~sim) {
+								osim = coboundary[bsim][1];
+							}
+						}
+					}
+				}
 			}
 			pause();
 		}

@@ -51,6 +51,15 @@ void show(int dim, vector< vector<int> > *generators) {
 	}
 }
 
+int get_id(vector<int>);
+
+vector< vector<int> > cycles;
+vector< vector<int> > *generators;
+vector< vector<int> > simplices;
+vector< vector<int> > boundary;
+vector< vector<int> > coboundary;
+map< vector<int>,int > simplex_lookup;
+
 int main(int argc, char** argv) {
 	
 #ifdef CURSES
@@ -70,13 +79,9 @@ int main(int argc, char** argv) {
 	FILE *fin = fopen(argv[1],"r");
 	int N[3], dim;
 	fscanf(fin,"%d",&dim);
-	vector< vector<int> > generators[dim+1];
-	vector< vector<int> > simplices;
-	vector< vector<int> > boundary;
-	vector< vector<int> > coboundary;
-	map< vector<int>,int > simplex_lookup;
 	
 	fscanf(fin,"%d",&N[0]);
+	generators = new vector< vector<int> >[dim+1];
 	for(int i = 0; i < N[0]; i++) {
 		double x, y, z;
 		fscanf(fin,"%lf%lf%lf",&x,&y,&z);
@@ -179,10 +184,18 @@ int main(int argc, char** argv) {
 				} else {
 					// Cycle
 					printw("Cycle detected\n");
+					vector<int> cyc;
 					int v = a;
 					do {
-						
+						vector<int> sim;
+						sim.push_back(v);
+						sim.push_back(par[v]);
+						int simid = get_id(sim);
+						printw("%d: %d %d\n",simid,v,par[v]);
+						cyc.push_back(simid);
+						v = par[v];
 					} while(v != a);
+					cycles.push_back(cyc);
 				}
 			} else if(d == 2) { // 2-simplex
 				// detect cycle
@@ -192,4 +205,21 @@ int main(int argc, char** argv) {
 	}
 
 	cleanexit(0);
+}
+
+int get_id(vector<int> verts) {
+	// compute sign of permutation
+	int N = verts.size();
+	bool neg = 0;
+	for(int i = 0; i<N-1; i++) {
+		for(int j = i+1; j<N; j++) {
+			if(verts[i] > verts[j]) neg = !neg;
+		}
+	}
+	// sort vertices
+	sort(verts.begin(),verts.end());
+	// do a lookup
+	int id = simplex_lookup[verts];
+	if(neg) return ~id;
+	else return id;
 }

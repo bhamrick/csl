@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
 					}
 				}
 				int bound = simplex_lookup[bverts];
-				if(j & 1) bound = ~bound;
+				if(j & 1) bound = ~bound; // negate bounding simplex if necessary
 				printw("Bounding simplex: %d\n",bound);
 				if(bound < 0) {
 					coboundary[~bound].push_back(~id);
@@ -201,23 +201,29 @@ int main(int argc, char** argv) {
 				// detect cycle
 				bool iscycle = true;
 				int vis[N[2]];
+				for(int i = 0; i<N[2]; i++) {
+					vis[i] = 0;
+				}
 				queue<int> q;
 				vector<int> cyc;
 				q.push(id);
+				// push necessary simplices for a cycle
 				while(!q.empty() && iscycle) {
+					// get simplex id and orientation
 					int sim = q.front();
 					q.pop();
 					bool neg = sim < 0;
 					if(neg) sim = ~sim;
+					// if we arrive at a simplex in the opposite orientation, there is no cycle
 					if((vis[sim] == 1 && neg) || (vis[sim]==-1 && !neg)) {
 						iscycle = false;
 						break;
 					}
-					if(vis[sim]) continue;
-					vis[sim] = neg ? -1 : 1;
-					cyc.push_back(sim);
+					if(vis[sim-off]) continue;
+					vis[sim-off] = neg ? -1 : 1;
+					cyc.push_back(neg ? ~sim : sim);
 					for(int i = 0; i<boundary[sim].size(); i++) {
-						int bsim = boundary[id][i];
+						int bsim = boundary[sim][i];
 						bool bneg = bsim < 0;
 						if(bneg) bsim = ~bsim;
 						if(coboundary[bsim].size() < 2) {
@@ -228,8 +234,24 @@ int main(int argc, char** argv) {
 							if(osim == sim || osim == ~sim) {
 								osim = coboundary[bsim][1];
 							}
+							// correct for previous negations and negate once more to cancel out boundary
+							if(bneg ^ neg ^ 1) osim = ~osim;
+							q.push(osim);
 						}
 					}
+				}
+				if(iscycle) {
+					printw("Cycle\n");
+					for(int i = 0; i<cyc.size(); i++) {
+						bool neg = cyc[i] < 0;
+						printw("%d %d\n",neg ? ~cyc[i] : cyc[i],neg);
+						for(int j = 0; j<boundary[neg?~cyc[i]:cyc[i]].size(); j++) {
+							bool bneg = boundary[neg?~cyc[i]:cyc[i]][j] < 0;
+							printw("  %d %d\n",bneg ? ~boundary[neg?~cyc[i]:cyc[i]][j] : boundary[neg?~cyc[i]:cyc[i]][j],bneg ^ neg);
+						}
+					}
+				} else {
+					printw("No cycle\n");
 				}
 			}
 			pause();

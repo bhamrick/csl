@@ -36,25 +36,36 @@ void cleanexit(int code) {
 
 }
 
-void show(int dim, vector< vector<int> > *generators) {
-	move(0,0);
+void show(int dim, vector< map<int,int> > *generators) {
 	for(int d = 0; d<=dim; d++) {
 		printw("H%d generators\n",d);
-		for(int i = 0; i<generators[d].size(); i++) {
-			printw("%d",generators[d][i][0]);
-			for(int j = 1; j<generators[d][i].size(); j++) {
-				printw("-%d",generators[d][i][j]);
-			}
-			printw("\n");
+		for(map<int,int>::iterator iter = generators[d].begin(); iter!=generators[d].end(); iter++) {
+			
 		}
-		printw("\n");
+//		for(int i = 0; i<generators[d].size(); i++) {
+//			if(generators[d][i][0] >= 0) {
+//				printw("%d",generators[d][i][0]);
+//			} else {
+//				printw("-%d",~generators[d][i][0]);
+//			}
+//			for(int j = 1; j<generators[d][i].size(); j++) {
+//				if(generators[d][i][j] >= 0) {
+//					printw(" %d",generators[d][i][j]);
+//				} else {
+//					printw(" -%d",~generators[d][i][j]);
+//				}
+//			}
+//			printw("\n");
+//		}
+//		printw("\n");
 	}
 }
 
 int get_id(vector<int>);
 
-vector< vector<int> > cycles;
-vector< vector<int> > *generators;
+map< int, vector<int> > cycles;
+vector< map<int,int> > *generators;
+vector<int> torsion;
 vector< vector<int> > simplices;
 vector< vector<int> > boundary;
 vector< vector<int> > coboundary;
@@ -181,6 +192,7 @@ int main(int argc, char** argv) {
 				if(par[a]==-1) {
 					// No cycle
 					printw("No cycle\n");
+					
 				} else {
 					// Cycle
 					printw("Cycle detected\n");
@@ -195,7 +207,8 @@ int main(int argc, char** argv) {
 						cyc.push_back(simid);
 						v = par[v];
 					} while(v != a);
-					cycles.push_back(cyc);
+					cycles[id] = cyc;
+					generators[1].push_back(cyc);
 				}
 			} else if(d == 2) { // 2-simplex
 				// detect cycle
@@ -250,10 +263,13 @@ int main(int argc, char** argv) {
 							printw("  %d %d\n",bneg ? ~boundary[neg?~cyc[i]:cyc[i]][j] : boundary[neg?~cyc[i]:cyc[i]][j],bneg ^ neg);
 						}
 					}
+					cycles[id] = cyc;
+					generators[2].push_back(cyc);
 				} else {
 					printw("No cycle\n");
 				}
 			}
+			show(dim,generators);
 			pause();
 		}
 	}

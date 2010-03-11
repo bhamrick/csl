@@ -36,11 +36,29 @@ void cleanexit(int code) {
 
 }
 
-void show(int dim, vector< map<int,int> > *generators) {
+map< int, map<int,int> > cycles;
+vector< map<int,int> > *generators;
+vector<int> torsion;
+vector< vector<int> > simplices;
+vector< vector<int> > boundary;
+vector< vector<int> > coboundary;
+map< vector<int>,int > simplex_lookup;
+int dim;
+
+void show() {
 	for(int d = 0; d<=dim; d++) {
 		printw("H%d generators\n",d);
-		for(map<int,int>::iterator iter = generators[d].begin(); iter!=generators[d].end(); iter++) {
-			
+		for(int i = 0; i<generators[d].size(); i++) {
+			map<int,int> cyc;
+			for(map<int,int>::iterator iter = generators[d][i].begin(); iter!=generators[d][i].end(); iter++) {
+				for(map<int,int>::iterator it = cycles[(*iter).first].begin(); it != cycles[(*iter).first].end(); it++) {
+					cyc[(*it).first] = cyc[(*it).first] + (*it).second * (*iter).second;
+				}
+			}
+			for(map<int,int>::iterator iter = cyc.begin(); iter != cyc.end(); iter++) {
+				printw("%d[%d] ",(*iter).second,(*iter).first);
+			}
+			printw("\n");
 		}
 //		for(int i = 0; i<generators[d].size(); i++) {
 //			if(generators[d][i][0] >= 0) {
@@ -63,14 +81,6 @@ void show(int dim, vector< map<int,int> > *generators) {
 
 int get_id(vector<int>);
 
-map< int, vector<int> > cycles;
-vector< map<int,int> > *generators;
-vector<int> torsion;
-vector< vector<int> > simplices;
-vector< vector<int> > boundary;
-vector< vector<int> > coboundary;
-map< vector<int>,int > simplex_lookup;
-
 int main(int argc, char** argv) {
 	
 #ifdef CURSES
@@ -88,20 +98,21 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	FILE *fin = fopen(argv[1],"r");
-	int N[3], dim;
+	int N[3];
 	fscanf(fin,"%d",&dim);
 	
 	fscanf(fin,"%d",&N[0]);
-	generators = new vector< vector<int> >[dim+1];
+	generators = new vector< map<int,int> >[dim+1];
 	for(int i = 0; i < N[0]; i++) {
 		double x, y, z;
 		fscanf(fin,"%lf%lf%lf",&x,&y,&z);
 		
-		generators[0].push_back(vector<int>());
-		generators[0][i].push_back(i);
+		generators[0].push_back(map<int,int>());
+		generators[0][i][i]=1;
+		cycles[i][i]=1;
 		
 		erase();
-		show(dim,generators);
+		show();
 		
 		vector<int> verts;
 		verts.push_back(i);
@@ -196,19 +207,25 @@ int main(int argc, char** argv) {
 				} else {
 					// Cycle
 					printw("Cycle detected\n");
-					vector<int> cyc;
+					map<int,int> cyc;
 					int v = a;
 					do {
 						vector<int> sim;
 						sim.push_back(v);
 						sim.push_back(par[v]);
 						int simid = get_id(sim);
-						printw("%d: %d %d\n",simid,v,par[v]);
-						cyc.push_back(simid);
+//						printw("%d: %d %d\n",simid,v,par[v]);
+						if(simid < 0) {
+							cyc[~simid] = cyc[~simid]-1;
+						} else {
+							cyc[simid] = cyc[simid]+1;
+						}
 						v = par[v];
 					} while(v != a);
 					cycles[id] = cyc;
-					generators[1].push_back(cyc);
+					map<int,int> gen;
+					gen[id] = 1;
+					generators[1].push_back(gen);
 				}
 			} else if(d == 2) { // 2-simplex
 				// detect cycle
@@ -218,7 +235,7 @@ int main(int argc, char** argv) {
 					vis[i] = 0;
 				}
 				queue<int> q;
-				vector<int> cyc;
+				map<int,int> cyc;
 				q.push(id);
 				// push necessary simplices for a cycle
 				while(!q.empty() && iscycle) {
@@ -234,7 +251,19 @@ int main(int argc, char** argv) {
 					}
 					if(vis[sim-off]) continue;
 					vis[sim-off] = neg ? -1 : 1;
-					cyc.push_back(neg ? ~sim : sim);
+					if(neg) {
+						if(~sim < 0) {
+							cyc[sim] = cyc[sim] - 1;
+						} else {
+							cyc[~sim] = cyc[~sim] + 1;
+						}
+					} else {
+						if(sim < 0) {
+							cyc[~sim] = cyc[~sim] - 1;
+						} else {
+							cyc[sim] = cyc[sim] + 1;
+						}
+					}
 					for(int i = 0; i<boundary[sim].size(); i++) {
 						int bsim = boundary[sim][i];
 						bool bneg = bsim < 0;
@@ -255,21 +284,15 @@ int main(int argc, char** argv) {
 				}
 				if(iscycle) {
 					printw("Cycle\n");
-					for(int i = 0; i<cyc.size(); i++) {
-						bool neg = cyc[i] < 0;
-						printw("%d %d\n",neg ? ~cyc[i] : cyc[i],neg);
-						for(int j = 0; j<boundary[neg?~cyc[i]:cyc[i]].size(); j++) {
-							bool bneg = boundary[neg?~cyc[i]:cyc[i]][j] < 0;
-							printw("  %d %d\n",bneg ? ~boundary[neg?~cyc[i]:cyc[i]][j] : boundary[neg?~cyc[i]:cyc[i]][j],bneg ^ neg);
-						}
-					}
 					cycles[id] = cyc;
-					generators[2].push_back(cyc);
+					map<int,int> gen;
+					gen[id]=1;
+					generators[2].push_back(gen);
 				} else {
 					printw("No cycle\n");
 				}
 			}
-			show(dim,generators);
+			show();
 			pause();
 		}
 	}

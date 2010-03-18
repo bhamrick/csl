@@ -83,6 +83,25 @@ void quotient(int d, map<int,int> rel) {
 	for(map<int,int>::iterator iter = rel.begin(); iter != rel.end(); iter++) {
 		mat[N][(*iter).first] = (*iter).second;
 	}
+	//Smith Normal Form code -- does not use sparseness
+	for(int i = 0; i<N; i++) {
+		bool found = false;
+		//choose a pivot and move it to a_i,i
+		for(int j = i; j<N; j++) {
+			bool brk = false;
+			for(int k = i; k < N+1; k++) {
+				if(mat[k][j] != 0) {
+					found = true;
+					//switch column i with column j
+					for(int l = i; l<N+1; l++) {
+						int t = mat[l][i];
+						mat[l][i] = mat[l][j];
+						mat[l][j] = t;
+					}
+				}
+			}
+		}
+	}
 }
 
 int main(int argc, char** argv) {

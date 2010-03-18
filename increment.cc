@@ -38,7 +38,7 @@ void cleanexit(int code) {
 
 map< int, map<int,int> > cycles;
 vector< map<int,int> > *generators;
-vector<int> torsion;
+vector<int> *torsion;
 vector< vector<int> > simplices;
 vector< vector<int> > boundary;
 vector< vector<int> > coboundary;
@@ -46,6 +46,14 @@ map< vector<int>,int > simplex_lookup;
 int dim;
 
 void show() {
+	printw("Fundamental Cycles:\n");
+	for(map< int,map<int,int> >::iterator iter = cycles.begin(); iter!=cycles.end(); iter++) {
+		printw("<%d>:",(*iter).first);
+		for(map<int,int>::iterator it = (*iter).second.begin(); it != (*iter).second.end(); it++) {
+			printw(" %d[%d]",(*it).second,(*it).first);
+		}
+		printw("\n");
+	}
 	for(int d = 0; d<=dim; d++) {
 		printw("H%d generators\n",d);
 		for(int i = 0; i<generators[d].size(); i++) {
@@ -58,28 +66,24 @@ void show() {
 			for(map<int,int>::iterator iter = cyc.begin(); iter != cyc.end(); iter++) {
 				printw("%d[%d] ",(*iter).second,(*iter).first);
 			}
-			printw("\n");
+			printw("Torsion: %d\n",torsion[d][i]);
 		}
-//		for(int i = 0; i<generators[d].size(); i++) {
-//			if(generators[d][i][0] >= 0) {
-//				printw("%d",generators[d][i][0]);
-//			} else {
-//				printw("-%d",~generators[d][i][0]);
-//			}
-//			for(int j = 1; j<generators[d][i].size(); j++) {
-//				if(generators[d][i][j] >= 0) {
-//					printw(" %d",generators[d][i][j]);
-//				} else {
-//					printw(" -%d",~generators[d][i][j]);
-//				}
-//			}
-//			printw("\n");
-//		}
-//		printw("\n");
 	}
 }
 
 int get_id(vector<int>);
+
+void quotient(int d, map<int,int> rel) {
+	// quotient H_d by the relation specified by rel = 0
+	int N = generators[d].size();
+	map< int, map<int,int> > mat;
+	for(int i = 0; i<N; i++) {
+		mat[i][i] = torsion[d][i];
+	}
+	for(map<int,int>::iterator iter = rel.begin(); iter != rel.end(); iter++) {
+		mat[N][(*iter).first] = (*iter).second;
+	}
+}
 
 int main(int argc, char** argv) {
 	
@@ -103,12 +107,14 @@ int main(int argc, char** argv) {
 	
 	fscanf(fin,"%d",&N[0]);
 	generators = new vector< map<int,int> >[dim+1];
+	torsion = new vector<int>[dim+1];
 	for(int i = 0; i < N[0]; i++) {
 		double x, y, z;
 		fscanf(fin,"%lf%lf%lf",&x,&y,&z);
 		
 		generators[0].push_back(map<int,int>());
 		generators[0][i][i]=1;
+		torsion[0].push_back(0);
 		cycles[i][i]=1;
 		
 		erase();
@@ -203,7 +209,7 @@ int main(int argc, char** argv) {
 				if(par[a]==-1) {
 					// No cycle
 					printw("No cycle\n");
-					
+					printw("Boundary: 1[%d] -1[%d]\n",boundary[id][0],~boundary[id][1]);
 				} else {
 					// Cycle
 					printw("Cycle detected\n");
@@ -226,6 +232,7 @@ int main(int argc, char** argv) {
 					map<int,int> gen;
 					gen[id] = 1;
 					generators[1].push_back(gen);
+					torsion[1].push_back(0);
 				}
 			} else if(d == 2) { // 2-simplex
 				// detect cycle
@@ -288,8 +295,49 @@ int main(int argc, char** argv) {
 					map<int,int> gen;
 					gen[id]=1;
 					generators[2].push_back(gen);
+					torsion[2].push_back(0);
 				} else {
 					printw("No cycle\n");
+					map<int,int> bound; // map simplex -> coefficient for boundary
+					map<int,int> rep; // representation in terms of fundamental cycles
+					priority_queue<int> pq;
+					for(int i = 0; i<boundary[id].size(); i++) {
+						if(boundary[id][i] < 0) {
+							bound[~boundary[id][i]] = bound[~boundary[id][i]]-1;
+						} else {
+							bound[boundary[id][i]] = bound[boundary[id][i]]+1;
+						}
+					}
+					for(map<int,int>::iterator iter = bound.begin(); iter!=bound.end(); iter++) {
+						pq.push((*iter).first);
+					}
+					printw("Boundary:\n");
+					for(map<int,int>::iterator iter=bound.begin(); iter!=bound.end(); iter++) {
+						if((*iter).second != 0) printw("%d[%d] ",(*iter).second,(*iter).first);
+					}
+					printw("\n");
+					while(!pq.empty()) {
+						int sim = pq.top();
+						pq.pop();
+						if(bound[sim]!=0) {
+							int c = bound[sim];
+							rep[sim] = c;
+							for(map<int,int>::iterator iter = cycles[sim].begin(); iter != cycles[sim].end(); iter++) {
+								if(bound[(*iter).first] == 0) {
+									pq.push((*iter).first);
+								}
+								bound[(*iter).first] = bound[(*iter).first] - (*iter).second * c;
+								if(bound[(*iter).first] == 0) {
+									bound.erase((*iter).first);
+								}
+							}
+						}
+					}
+					printw("Boundary Representation:\n");
+					for(map<int,int>::iterator iter = rep.begin(); iter != rep.end(); iter++) {
+						if((*iter).second != 0) printw("%d<%d> ",(*iter).second,(*iter).first);
+					}
+					printw("\n");
 				}
 			}
 			show();

@@ -39,6 +39,7 @@ void cleanexit(int code) {
 
 map< int, map<int,int> > cycles;
 map< int, map<int,int> > cyclerep;
+map< int, int > sdim;
 vector< map<int,int> > *generators;
 vector<int> *torsion;
 vector< vector<int> > simplices;
@@ -54,11 +55,16 @@ void show() {
 		for(map<int,int>::iterator it = (*iter).second.begin(); it != (*iter).second.end(); it++) {
 			printw(" %d[%d]",(*it).second,(*it).first);
 		}
+		printw(" =");
+		for(map<int,int>::iterator it = cyclerep[(*iter).first].begin(); it!=cyclerep[(*iter).first].end(); it++) {
+			printw(" %d(%d)",(*it).second,(*it).first);
+		}
 		printw("\n");
 	}
 	for(int d = 0; d<=dim; d++) {
 		printw("H%d generators\n",d);
 		for(int i = 0; i<generators[d].size(); i++) {
+			printw("%d: ",i);
 			map<int,int> cyc;
 			for(map<int,int>::iterator iter = generators[d][i].begin(); iter!=generators[d][i].end(); iter++) {
 				for(map<int,int>::iterator it = cycles[(*iter).first].begin(); it != cycles[(*iter).first].end(); it++) {
@@ -118,7 +124,7 @@ void quotient(int d, map<int,int> rel) {
 					}
 				}
 			}
-			//improve column-wise -- changes generators
+			//improve column-wise -- changes generators and cycle representations
 			for(int j = i+1; j<N; j++) {
 				if(mat[i][j] % mat[i][i] == 0) {
 					// if divisible, clear it
@@ -129,6 +135,9 @@ void quotient(int d, map<int,int> rel) {
 					//<j> becomes <j> - q*<i>
 					for(map<int,int>::iterator iter = generators[d][i].begin(); iter != generators[d][i].end(); iter++) {
 						generators[d][j][(*iter).first] = generators[d][j][(*iter).first] - q*(*iter).second;
+					}
+					for(map< int, map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
+						
 					}
 				} else {
 					//if not divisible make it devisible, clear it, and mark flag to continue computation
@@ -197,6 +206,8 @@ int main(int argc, char** argv) {
 		generators[0][i][i]=1;
 		torsion[0].push_back(0);
 		cycles[i][i]=1;
+		cyclerep[i][generators[0].size()-1]=1;
+		sdim[i] = 0;
 		
 		erase();
 		show();
@@ -256,6 +267,7 @@ int main(int argc, char** argv) {
 			
 			// split into cases
 			if(d == 1) { // 1-simplex
+				sdim[id] = 1;
 				// detect cycle
 				int par[N[0]];
 				for(int i = 0; i<N[0]; i++) {
@@ -314,8 +326,10 @@ int main(int argc, char** argv) {
 					gen[id] = 1;
 					generators[1].push_back(gen);
 					torsion[1].push_back(0);
+					cyclerep[id][generators[1].size()-1] = 1;
 				}
 			} else if(d == 2) { // 2-simplex
+				SDIM[ID] = 2;
 				// detect cycle
 				bool iscycle = true;
 				int vis[N[2]];
@@ -377,6 +391,7 @@ int main(int argc, char** argv) {
 					gen[id]=1;
 					generators[2].push_back(gen);
 					torsion[2].push_back(0);
+					cyclerep[id][generators[2].size()-1]=1;
 				} else {
 					printw("No cycle\n");
 					map<int,int> bound; // map simplex -> coefficient for boundary

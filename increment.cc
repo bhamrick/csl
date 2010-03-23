@@ -2,6 +2,7 @@
 //#define NDEBUG
 
 #include<simplex.hh>
+#include<bezout.hh>
 #include<vector>
 #include<queue>
 #include<map>
@@ -37,6 +38,7 @@ void cleanexit(int code) {
 }
 
 map< int, map<int,int> > cycles;
+map< int, map<int,int> > cyclerep;
 vector< map<int,int> > *generators;
 vector<int> *torsion;
 vector< vector<int> > simplices;
@@ -85,18 +87,78 @@ void quotient(int d, map<int,int> rel) {
 	}
 	//Smith Normal Form code -- does not use sparseness
 	for(int i = 0; i<N; i++) {
-		bool found = false;
-		//choose a pivot and move it to a_i,i
-		for(int j = i; j<N; j++) {
-			bool brk = false;
-			for(int k = i; k < N+1; k++) {
-				if(mat[k][j] != 0) {
-					found = true;
-					//switch column i with column j
-					for(int l = i; l<N+1; l++) {
-						int t = mat[l][i];
-						mat[l][i] = mat[l][j];
-						mat[l][j] = t;
+		// Pretend there is no issue of a pivot
+		if(mat[i][i] == 0) continue;;
+		bool done = false;
+		while(!done) {
+			done = true;
+			//improve row-wise -- no change to generators
+			for(int j = i+1; j<N+1; j++) {
+				if(mat[j][i] % mat[i][i] == 0) {
+					// if divisible, clear it
+					int q = mat[j][i] / mat[i][i];
+					for(int k = i; k<N; k++) {
+						mat[j][k] -= q*mat[i][k];
+					}
+				} else {
+					//if not divisible, make it divisible and clear it and mark flag to continue computation
+					done = false;
+					int e, x, y, alpha, beta;
+					e = gcd(mat[i][i],mat[j][i],x,y);
+					alpha = mat[i][i]/e;
+					beta = mat[j][i]/e;
+					for(int k = 0; k<N; k++) {
+						int c = mat[i][k], d = mat[j][k];
+						mat[i][k] = c*x + d*y;
+						mat[j][k] = -c*beta + d*alpha;
+					}
+					int q = mat[j][i] / mat[i][i];
+					for(int k = 0; k<N; k++) {
+						mat[j][k] -= q*mat[i][k];
+					}
+				}
+			}
+			//improve column-wise -- changes generators
+			for(int j = i+1; j<N; j++) {
+				if(mat[i][j] % mat[i][i] == 0) {
+					// if divisible, clear it
+					int q = mat[i][j] / mat[i][i];
+					for(int k = 0; k<N+1; k++) {
+						mat[k][j] -= q*mat[k][i];
+					}
+					//<j> becomes <j> - q*<i>
+					for(map<int,int>::iterator iter = generators[d][i].begin(); iter != generators[d][i].end(); iter++) {
+						generators[d][j][(*iter).first] = generators[d][j][(*iter).first] - q*(*iter).second;
+					}
+				} else {
+					//if not divisible make it devisible, clear it, and mark flag to continue computation
+					done = false;
+					int e, x, y, alpha, beta;
+					e = gcd(mat[i][i],mat[i][j],x,y);
+					alpha = mat[i][i]/e;
+					beta = mat[i][j]/e;
+					for(int k = 0; k<N+1; k++) {
+						int c = mat[k][i], d = mat[k][j];
+						mat[k][i] = c*x + d*y;
+						mat[k][j] = -c*beta + d*alpha;
+					}
+					//<i> becomes x*<i> + y*<j>, <j> becomes -beta*<i> + alpha*<j>
+					map<int,int> ti(generators[d][i]), tj(generators[d][j]);
+					for(map<int,int>::iterator iter = ti.begin(); iter != ti.end(); iter++) {
+						generators[d][i][(*iter).first] = x*ti[(*iter).first] + y*tj[(*iter).first];
+						generators[d][j][(*iter).first] = -beta*ti[(*iter).first] + alpha*tj[(*iter).first];
+					}
+					for(map<int,int>::iterator iter = tj.begin(); iter != tj.end(); iter++) {
+						generators[d][i][(*iter).first] = x*ti[(*iter).first] + y*tj[(*iter).first];
+						generators[d][j][(*iter).first] = -beta*ti[(*iter).first] + alpha*tj[(*iter).first];
+					}
+					int q = mat[i][j] / mat[i][i];
+					for(int k = 0; k<N+1; k++) {
+						mat[k][j] = mat[k][j] - q*mat[k][i];
+					}
+					//<j> becomes <j> - q*<i>
+					for(map<int,int>::iterator iter = generators[d][i].begin(); iter != generators[d][i].end(); iter++) {
+						generators[d][j][(*iter).first] = generators[d][j][(*iter).first] - q*(*iter).second;
 					}
 				}
 			}

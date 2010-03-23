@@ -26,8 +26,8 @@ classify: classify.o
 onedim: onedim.o
 	g++ -o onedim $(LDFLAGS) onedim.o
 
-increment: increment.o
-	g++ -o increment $(LDFLAGS) increment.o
+increment: increment.o bezout.o
+	g++ -o increment $(LDFLAGS) increment.o bezout.o
 
 %.o: %.cc
 	g++ $(CCFLAGS) $< -c

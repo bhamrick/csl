@@ -82,6 +82,11 @@ void show() {
 int get_id(vector<int>);
 
 void quotient(int d, map<int,int> rel) {
+	printw("Quotient H_%d by 0=",d);
+	for(map<int,int>::iterator iter = rel.begin(); iter!=rel.end(); iter++) {
+		printw("%d(%d) ",(*iter).second,(*iter).first);
+	}
+	printw("\n");
 	// quotient H_d by the relation specified by rel = 0
 	int N = generators[d].size();
 	map< int, map<int,int> > mat;
@@ -91,10 +96,62 @@ void quotient(int d, map<int,int> rel) {
 	for(map<int,int>::iterator iter = rel.begin(); iter != rel.end(); iter++) {
 		mat[N][(*iter).first] = (*iter).second;
 	}
+//	for(int i = 0; i<N+1; i++) {
+//		for(int j = 0; j<N; j++) {
+//			printw("%d ",mat[i][j]);
+//		}
+//		printw("\n");
+//	}
+//	printw("\n");
 	//Smith Normal Form code -- does not use sparseness
 	for(int i = 0; i<N; i++) {
-		// Pretend there is no issue of a pivot
-		if(mat[i][i] == 0) continue;;
+//		for(int ii = 0; ii<N+1; ii++) {
+//			for(int jj = 0; jj<N; jj++) {
+//				printw("%d ",mat[ii][jj]);
+//			}
+//			printw("\n");
+//		}
+//		printw("\n");
+//		printw("%d %d\n",i,mat[i][i]);
+		bool found = false;
+		//choose a pivot and move it to a_i,i
+		for(int j = i; j<N; j++) {
+			bool brk = false;
+			for(int k = i; k<N+1; k++) {
+				if(mat[k][j]!=0) {
+					found = true;
+//					printw("Pivot: %d %d\n",k,j);
+					//switch column i with column j
+					for(int l = i; l<N+1; l++) {
+						int t = mat[l][i];
+						mat[l][i] = mat[l][j];
+						mat[l][j] = t;
+					}
+					//switch generators i and j
+					map<int,int> gi(generators[d][i]);
+					generators[d][i] = generators[d][j];
+					generators[d][j] = gi;
+					//switch coefficients of i and j in cycle reps
+					for(map< int,map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
+						if(sdim[(*iter).first]==d) {
+							int t = (*iter).second[i];
+							(*iter).second[i] = (*iter).second[j];
+							(*iter).second[j] = t;
+						}
+					}
+					//switch row i with row k
+					for(int l = i; l<N; l++) {
+						int t = mat[i][l];
+						mat[i][l] = mat[k][l];
+						mat[k][l] = t;
+					}
+					brk = true;
+					break;
+				}
+			}
+			if(brk) break;
+		}
+		if(!found) break;
 		bool done = false;
 		while(!done) {
 			done = true;
@@ -136,8 +193,11 @@ void quotient(int d, map<int,int> rel) {
 					for(map<int,int>::iterator iter = generators[d][i].begin(); iter != generators[d][i].end(); iter++) {
 						generators[d][j][(*iter).first] = generators[d][j][(*iter).first] - q*(*iter).second;
 					}
+					//For each cycle, add q times the coefficient of <j> to the coefficient of <i>
 					for(map< int, map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
-						
+						if(sdim[(*iter).first]==d) {
+							(*iter).second[i] += q*(*iter).second[j];
+						}
 					}
 				} else {
 					//if not divisible make it devisible, clear it, and mark flag to continue computation
@@ -161,6 +221,14 @@ void quotient(int d, map<int,int> rel) {
 						generators[d][i][(*iter).first] = x*ti[(*iter).first] + y*tj[(*iter).first];
 						generators[d][j][(*iter).first] = -beta*ti[(*iter).first] + alpha*tj[(*iter).first];
 					}
+					//For each cycle, c_i -> alpha*c_i + beta*c_j, c_j -> -y*c_i + x*c_j
+					for(map< int, map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
+						if(sdim[(*iter).first]==d) {
+							int ci = (*iter).second[i], cj = (*iter).second[j];
+							(*iter).second[i] = alpha*ci + beta*cj;
+							(*iter).second[j] = -y*ci + x*cj;
+						}
+					}
 					int q = mat[i][j] / mat[i][i];
 					for(int k = 0; k<N+1; k++) {
 						mat[k][j] = mat[k][j] - q*mat[k][i];
@@ -169,9 +237,19 @@ void quotient(int d, map<int,int> rel) {
 					for(map<int,int>::iterator iter = generators[d][i].begin(); iter != generators[d][i].end(); iter++) {
 						generators[d][j][(*iter).first] = generators[d][j][(*iter).first] - q*(*iter).second;
 					}
+					//For each cycle, add q times the coefficient of <j> to the coefficient of <i>
+					for(map< int, map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
+						if(sdim[(*iter).first]==d) {
+							(*iter).second[i] += q*(*iter).second[j];
+						}
+					}
 				}
 			}
 		}
+	}
+	//Transfer torsion coefficients back
+	for(int i = 0; i<N; i++) {
+		torsion[d][i] = mat[i][i];
 	}
 }
 
@@ -303,6 +381,19 @@ int main(int argc, char** argv) {
 					// No cycle
 					printw("No cycle\n");
 					printw("Boundary: 1[%d] -1[%d]\n",boundary[id][0],~boundary[id][1]);
+					map<int,int> rel;
+					for(int i = 0; i<=d; i++) {
+						int sim = boundary[id][i];
+						int coeff = 1;
+						if(sim < 0) {
+							sim = ~sim;
+							coeff = -1;
+						}
+						for(map<int,int>::iterator iter = cyclerep[sim].begin(); iter!=cyclerep[sim].end(); iter++) {
+							rel[(*iter).first] += coeff*(*iter).second;
+						}
+					}
+					quotient(d-1,rel);
 				} else {
 					// Cycle
 					printw("Cycle detected\n");
@@ -329,7 +420,7 @@ int main(int argc, char** argv) {
 					cyclerep[id][generators[1].size()-1] = 1;
 				}
 			} else if(d == 2) { // 2-simplex
-				SDIM[ID] = 2;
+				sdim[id] = 2;
 				// detect cycle
 				bool iscycle = true;
 				int vis[N[2]];
@@ -434,6 +525,19 @@ int main(int argc, char** argv) {
 						if((*iter).second != 0) printw("%d<%d> ",(*iter).second,(*iter).first);
 					}
 					printw("\n");
+					map<int,int> rel;
+					for(int i = 0; i<=d; i++) {
+						int sim = boundary[id][i];
+						int coeff = 1;
+						if(sim < 0) {
+							sim = ~sim;
+							coeff = -1;
+						}
+						for(map<int,int>::iterator iter = cyclerep[sim].begin(); iter!=cyclerep[sim].end(); iter++) {
+							rel[(*iter).first] += coeff*(*iter).second;
+						}
+					}
+					quotient(d-1,rel);
 				}
 			}
 			show();

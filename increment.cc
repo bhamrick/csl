@@ -53,11 +53,11 @@ void show() {
 	for(map< int,map<int,int> >::iterator iter = cycles.begin(); iter!=cycles.end(); iter++) {
 		printw("<%d>:",(*iter).first);
 		for(map<int,int>::iterator it = (*iter).second.begin(); it != (*iter).second.end(); it++) {
-			printw(" %d[%d]",(*it).second,(*it).first);
+			if((*it).second != 0) printw(" %d[%d]",(*it).second,(*it).first);
 		}
 		printw(" =");
 		for(map<int,int>::iterator it = cyclerep[(*iter).first].begin(); it!=cyclerep[(*iter).first].end(); it++) {
-			printw(" %d(%d)",(*it).second,(*it).first);
+			if((*it).second != 0) printw(" %d(%d)",(*it).second,(*it).first);
 		}
 		printw("\n");
 	}
@@ -72,7 +72,7 @@ void show() {
 				}
 			}
 			for(map<int,int>::iterator iter = cyc.begin(); iter != cyc.end(); iter++) {
-				printw("%d[%d] ",(*iter).second,(*iter).first);
+				if((*iter).second != 0) printw("%d[%d] ",(*iter).second,(*iter).first);
 			}
 			printw("Torsion: %d\n",torsion[d][i]);
 		}
@@ -189,14 +189,14 @@ void quotient(int d, map<int,int> rel) {
 					for(int k = 0; k<N+1; k++) {
 						mat[k][j] -= q*mat[k][i];
 					}
-					//<j> becomes <j> - q*<i>
-					for(map<int,int>::iterator iter = generators[d][i].begin(); iter != generators[d][i].end(); iter++) {
-						generators[d][j][(*iter).first] = generators[d][j][(*iter).first] - q*(*iter).second;
+					//<i> becomes <i> - q*<j>
+					for(map<int,int>::iterator iter = generators[d][j].begin(); iter != generators[d][j].end(); iter++) {
+						generators[d][i][(*iter).first] -= q*(*iter).second;
 					}
-					//For each cycle, add q times the coefficient of <j> to the coefficient of <i>
+					//For each cycle, add q times the coefficient of <i> to the coefficient of <j>
 					for(map< int, map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
 						if(sdim[(*iter).first]==d) {
-							(*iter).second[i] += q*(*iter).second[j];
+							(*iter).second[j] += q*(*iter).second[i];
 						}
 					}
 				} else {
@@ -211,42 +211,49 @@ void quotient(int d, map<int,int> rel) {
 						mat[k][i] = c*x + d*y;
 						mat[k][j] = -c*beta + d*alpha;
 					}
-					//<i> becomes x*<i> + y*<j>, <j> becomes -beta*<i> + alpha*<j>
+					//<i> becomes alpha*<i> + beta*<j>, <j> becomes -y*<i> + x*<j>
 					map<int,int> ti(generators[d][i]), tj(generators[d][j]);
 					for(map<int,int>::iterator iter = ti.begin(); iter != ti.end(); iter++) {
-						generators[d][i][(*iter).first] = x*ti[(*iter).first] + y*tj[(*iter).first];
-						generators[d][j][(*iter).first] = -beta*ti[(*iter).first] + alpha*tj[(*iter).first];
+						generators[d][i][(*iter).first] = alpha*ti[(*iter).first] + beta*tj[(*iter).first];
+						generators[d][j][(*iter).first] = -y*ti[(*iter).first] + x*tj[(*iter).first];
 					}
 					for(map<int,int>::iterator iter = tj.begin(); iter != tj.end(); iter++) {
-						generators[d][i][(*iter).first] = x*ti[(*iter).first] + y*tj[(*iter).first];
-						generators[d][j][(*iter).first] = -beta*ti[(*iter).first] + alpha*tj[(*iter).first];
+						generators[d][i][(*iter).first] = alpha*ti[(*iter).first] + beta*tj[(*iter).first];
+						generators[d][j][(*iter).first] = -y*ti[(*iter).first] + x*tj[(*iter).first];
 					}
-					//For each cycle, c_i -> alpha*c_i + beta*c_j, c_j -> -y*c_i + x*c_j
+					//For each cycle, c_i -> x*c_i + y*c_j, c_j -> -beta*c_i + alpha*c_j
 					for(map< int, map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
 						if(sdim[(*iter).first]==d) {
 							int ci = (*iter).second[i], cj = (*iter).second[j];
-							(*iter).second[i] = alpha*ci + beta*cj;
-							(*iter).second[j] = -y*ci + x*cj;
+							(*iter).second[i] = x*ci + y*cj;
+							(*iter).second[j] = -beta*ci + alpha*cj;
 						}
 					}
 					int q = mat[i][j] / mat[i][i];
 					for(int k = 0; k<N+1; k++) {
 						mat[k][j] = mat[k][j] - q*mat[k][i];
 					}
-					//<j> becomes <j> - q*<i>
-					for(map<int,int>::iterator iter = generators[d][i].begin(); iter != generators[d][i].end(); iter++) {
-						generators[d][j][(*iter).first] = generators[d][j][(*iter).first] - q*(*iter).second;
+					//<i> becomes <i> - q*<j>
+					for(map<int,int>::iterator iter = generators[d][j].begin(); iter != generators[d][j].end(); iter++) {
+						generators[d][i][(*iter).first] -= q*(*iter).second;
 					}
-					//For each cycle, add q times the coefficient of <j> to the coefficient of <i>
+					//For each cycle, add q times the coefficient of <i> to the coefficient of <j>
 					for(map< int, map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
 						if(sdim[(*iter).first]==d) {
-							(*iter).second[i] += q*(*iter).second[j];
+							(*iter).second[j] += q*(*iter).second[i];
 						}
 					}
 				}
 			}
 		}
 	}
+//	for(int i = 0; i<N+1; i++) {
+//		for(int j = 0; j<N; j++) {
+//			printw("%d ",mat[i][j]);
+//		}
+//		printw("\n");
+//	}
+//	printw("\n");
 	//Transfer torsion coefficients back
 	for(int i = 0; i<N; i++) {
 		torsion[d][i] = mat[i][i];

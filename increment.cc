@@ -37,18 +37,19 @@ void cleanexit(int code) {
 
 }
 
-map< int, map<int,int> > cycles;
-map< int, map<int,int> > cyclerep;
-map< int, int > sdim;
-vector< map<int,int> > *generators;
-vector<int> *torsion;
-vector< vector<int> > simplices;
-vector< vector<int> > boundary;
-vector< vector<int> > coboundary;
-map< vector<int>,int > simplex_lookup;
+map< int, map<int,int> > cycles; // fundamental cycles
+map< int, map<int,int> > cyclerep; // representation in terms of generators
+map< int, int > sdim; // dimension of simplices
+vector< map<int,int> > *generators; // generators
+vector<int> *torsion; // torsion coefficients
+vector< vector<int> > simplices; // vertices of simplices
+vector< vector<int> > boundary; // bounding simplices
+vector< vector<int> > coboundary; // cobounding simplices
+map< vector<int>,int > simplex_lookup; // lookup by sorted vertex list
 int dim;
 
 void show() {
+/*
 	printw("Fundamental Cycles:\n");
 	for(map< int,map<int,int> >::iterator iter = cycles.begin(); iter!=cycles.end(); iter++) {
 		printw("<%d>:",(*iter).first);
@@ -61,20 +62,22 @@ void show() {
 		}
 		printw("\n");
 	}
-	for(int d = 0; d<=dim; d++) {
+*/	for(int d = 0; d<=dim; d++) {
 		printw("H%d generators\n",d);
 		for(int i = 0; i<generators[d].size(); i++) {
-			printw("%d: ",i);
 			map<int,int> cyc;
 			for(map<int,int>::iterator iter = generators[d][i].begin(); iter!=generators[d][i].end(); iter++) {
 				for(map<int,int>::iterator it = cycles[(*iter).first].begin(); it != cycles[(*iter).first].end(); it++) {
 					cyc[(*it).first] = cyc[(*it).first] + (*it).second * (*iter).second;
 				}
 			}
-			for(map<int,int>::iterator iter = cyc.begin(); iter != cyc.end(); iter++) {
-				if((*iter).second != 0) printw("%d[%d] ",(*iter).second,(*iter).first);
+			if(torsion[d][i] != 1 && torsion[d][i] != -1) {
+				printw("%d: ",i);
+				for(map<int,int>::iterator iter = cyc.begin(); iter != cyc.end(); iter++) {
+					if((*iter).second != 0) printw("%d[%d] ",(*iter).second,(*iter).first);
+				}
+				printw("Torsion: %d\n",torsion[d][i]);
 			}
-			printw("Torsion: %d\n",torsion[d][i]);
 		}
 	}
 }
@@ -445,7 +448,7 @@ int main(int argc, char** argv) {
 					bool neg = sim < 0;
 					if(neg) sim = ~sim;
 					// if we arrive at a simplex in the opposite orientation, there is no cycle
-					if((vis[sim] == 1 && neg) || (vis[sim]==-1 && !neg)) {
+					if((vis[sim-off] == 1 && neg) || (vis[sim-off]==-1 && !neg)) {
 						iscycle = false;
 						break;
 					}
@@ -533,15 +536,9 @@ int main(int argc, char** argv) {
 					}
 					printw("\n");
 					map<int,int> rel;
-					for(int i = 0; i<=d; i++) {
-						int sim = boundary[id][i];
-						int coeff = 1;
-						if(sim < 0) {
-							sim = ~sim;
-							coeff = -1;
-						}
-						for(map<int,int>::iterator iter = cyclerep[sim].begin(); iter!=cyclerep[sim].end(); iter++) {
-							rel[(*iter).first] += coeff*(*iter).second;
+					for(map<int,int>::iterator it = rep.begin(); it!=rep.end(); it++) {
+						for(map<int,int>::iterator iter = cyclerep[(*it).first].begin(); iter!=cyclerep[(*it).first].end(); iter++) {
+							rel[(*iter).first] += (*it).second*(*iter).second;
 						}
 					}
 					quotient(d-1,rel);

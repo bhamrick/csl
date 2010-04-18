@@ -1,9 +1,9 @@
-CCFLAGS=-I. -g
-LDFLAGS=-lm -g -lgmp -lglut -lGLU -lGLU -lXmu -lXext -lXi -lX11 -lcurses
+CCFLAGS=-I. -g -O2
+LDFLAGS=-lm -g -lgmp -lglut -lGLU -lGLU -lXmu -lXext -lXi -lX11 -lcurses -O2
 
 OBJECTS=matrix.o bezout.o
 
-all: test generate benchmark display surfacehom classify onedim increment
+all: test generate benchmark display surfacehom classify onedim increment maketorus compute inchom.o
 
 test: $(OBJECTS) test.o
 	g++ -o test $(LDFLAGS) $(OBJECTS) test.o
@@ -29,6 +29,12 @@ onedim: onedim.o
 increment: increment.o bezout.o
 	g++ -o increment $(LDFLAGS) increment.o bezout.o
 
+maketorus: maketorus.o
+	g++ -o maketorus $(LDFLAGS) maketorus.o
+
+compute: compute.o inchom.o bezout.o
+	g++ -o compute $(LDFLAGS) compute.o inchom.o bezout.o
+
 %.o: %.cc
 	g++ $(CCFLAGS) $< -c
 
@@ -42,3 +48,6 @@ clean:
 	rm -f classify classify.o
 	rm -f onedim onedim.o
 	rm -f increment increment.o
+	rm -f maketorus maketorus.o
+	rm -f compute compute.o
+	rm -f inchom.o

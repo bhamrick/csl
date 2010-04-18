@@ -1,12 +1,13 @@
 #define CURSES
 //#define NDEBUG
 
-#include<simplex.hh>
+//#include<simplex.hh>
 #include<bezout.hh>
 #include<vector>
 #include<queue>
 #include<map>
 #include<csignal>
+#include<algorithm>
 
 #ifdef CURSES
 
@@ -264,6 +265,10 @@ void quotient(int d, map<int,int> rel) {
 }
 
 int main(int argc, char** argv) {
+	if(argc < 2) {
+		printf("Usage: %s filename\n",argv[0]);
+		return 1;
+	}
 	
 #ifdef CURSES
 	initscr(); cbreak(); noecho();
@@ -275,10 +280,6 @@ int main(int argc, char** argv) {
 	signal(SIGTERM, &cleanexit);
 	signal(SIGINT, &cleanexit);
 
-	if(argc < 2) {
-		printf("Usage: %s filename\n",argv[0]);
-		return 1;
-	}
 	FILE *fin = fopen(argv[1],"r");
 	int N[3];
 	fscanf(fin,"%d",&dim);

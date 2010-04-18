@@ -33,16 +33,16 @@ void displayFunc(int value) {
 	glScalef(s,s,s);
 	glRotatef(alpha,0.0f,1.0f,0.0f);
 	glRotatef(beta,1.0f,0.0f,0.0f);
-	glBegin(GL_LINES);
-	glColor3d(0.0,0.0,0.0);
-	for(int i = 0; i<com.simplices.size(); i++) {
-		if(com.simplices[i]->dim == 1) {
-			for(int j = 0; j<2; j++) {
-				glVertex3d(com.points[com.simplices[i]->verts[j]]->x,com.points[com.simplices[i]->verts[j]]->y,com.points[com.simplices[i]->verts[j]]->z);
-			}
-		}
-	}
-	glEnd();
+//	glBegin(GL_LINES);
+//	glColor3d(0.0,0.0,0.0);
+//	for(int i = 0; i<com.simplices.size(); i++) {
+//		if(com.simplices[i]->dim == 1) {
+//			for(int j = 0; j<2; j++) {
+//				glVertex3d(com.points[com.simplices[i]->verts[j]]->x,com.points[com.simplices[i]->verts[j]]->y,com.points[com.simplices[i]->verts[j]]->z);
+//			}
+//		}
+//	}
+//	glEnd();
 	glBegin(GL_TRIANGLES);
 	for(int i = 0; i<com.simplices.size(); i++) {
 		glColor3d(colors[i].r,colors[i].g,colors[i].b);

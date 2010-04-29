@@ -116,14 +116,14 @@ void scomplex::quotient(int d, map<int,int> rel) {
 					for(int k = 0; k<N+1; k++) {
 						mat[k][j] -= q*mat[k][i];
 					}
-					//<i> becomes <i> - q*<j>
+					//<i> becomes <i> + q*<j>
 					for(map<int,int>::iterator iter = generators[d][j].begin(); iter != generators[d][j].end(); iter++) {
-						generators[d][i][(*iter).first] -= q*(*iter).second;
+						generators[d][i][(*iter).first] += q*(*iter).second;
 					}
-					//For each cycle, add q times the coefficient of <i> to the coefficient of <j>
+					//For each cycle, subtract q times the coefficient of <i> to the coefficient of <j>
 					for(map< int, map<int,int> >::iterator iter = cyclerep.begin(); iter != cyclerep.end(); iter++) {
 						if(sdim[(*iter).first]==d) {
-							(*iter).second[j] += q*(*iter).second[i];
+							(*iter).second[j] -= q*(*iter).second[i];
 						}
 					}
 				} else {

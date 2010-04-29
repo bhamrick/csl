@@ -13,6 +13,8 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	FILE *fin = fopen(argv[1],"r");
+	FILE *output = fopen("output.asy","w");
+	fprintf(output,"import settings;\nimport three;\n\noutformat=\"pdf\";\n\nsize(200);\n\ncurrentprojection=orthographic(1,1,1);\n\n");
 	int N[3], dim;
 	fscanf(fin,"%d",&dim);
 	if(dim > 2) return 1;
@@ -39,22 +41,34 @@ int main(int argc, char** argv) {
 				verts.push_back(v);
 			}
 			com->add_simplex(d,verts);
+			if(d == 1) {
+				fprintf(output,"draw((%lf,%lf,%lf)--(%lf,%lf,%lf));\n",coords[verts[0]][0],coords[verts[0]][1],coords[verts[0]][2],coords[verts[1]][0],coords[verts[1]][1],coords[verts[1]][2]);
+			}
 		}
 	}
+	fprintf(output,"save();\n");
+	fprintf(output,"shipout(\"input\");\n");
 	vector<int> torsion = com->get_torsion(1);
 	vector< map<int,int> > generators = com->get_generators(1);
+	int index = 0;
 	for(int i = 0; i<torsion.size(); i++) {
 		if(torsion[i] != 1 && torsion[i] != -1) {
 			printf("%d:",torsion[i]);
+			index++;
+			fprintf(output,"restore();\nsave();\n");
 			for(map<int,int>::iterator iter = generators[i].begin(); iter != generators[i].end(); iter++) {
 				//printf(" %d[%d]",(*iter).second,(*iter).first);
 				if((*iter).second != 0) {
 					printf("\t%d--%d",com->get_vertices((*iter).first)[0],com->get_vertices((*iter).first)[1]);
+					int v1 = com->get_vertices((*iter).first)[0], v2 = com->get_vertices((*iter).first)[1];
+					fprintf(output,"draw((%lf,%lf,%lf)--(%lf,%lf,%lf),red+2);\n",coords[v1][0],coords[v1][1],coords[v1][2],coords[v2][0],coords[v2][1],coords[v2][2]);
 				}
 			}
+			fprintf(output,"shipout(\"output%d\");\n",index);
 			printf("\n");
 		}
 	}
 	fclose(fin);
+	fclose(output);
 	return 0;
 }

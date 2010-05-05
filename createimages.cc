@@ -14,7 +14,8 @@ int main(int argc, char** argv) {
 	}
 	FILE *fin = fopen(argv[1],"r");
 	FILE *output = fopen("output.asy","w");
-	fprintf(output,"import settings;\nimport three;\n\noutformat=\"pdf\";\n\nsize(200);\n\ncurrentprojection=orthographic(1,1,1);\n\n");
+	double viewx=6, viewy=8, viewz=4;
+	fprintf(output,"import settings;\nimport three;\n\noutformat=\"pdf\";\n\nsize(200);\n\ncurrentprojection=orthographic(%lf,%lf,%lf);\n\n",viewx,viewy,viewz);
 	int N[3], dim;
 	fscanf(fin,"%d",&dim);
 	if(dim > 2) return 1;

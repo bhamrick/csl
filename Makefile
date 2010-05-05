@@ -3,7 +3,7 @@ LDFLAGS=-lm -g -lgmp -lglut -lGLU -lGLU -lXmu -lXext -lXi -lX11 -lcurses -O2
 
 OBJECTS=matrix.o bezout.o
 
-all: test generate benchmark display surfacehom classify onedim increment maketorus compute createimages inchom.o
+all: test generate benchmark display surfacehom classify onedim increment maketorus makeklein compute createimages inchom.o
 
 test: $(OBJECTS) test.o
 	g++ -o test $(LDFLAGS) $(OBJECTS) test.o
@@ -32,6 +32,9 @@ increment: increment.o bezout.o
 maketorus: maketorus.o
 	g++ -o maketorus $(LDFLAGS) maketorus.o
 
+makeklein: makeklein.o
+	g++ -o makeklein $(LDFLAGS) makeklein.o
+
 compute: compute.o inchom.o bezout.o
 	g++ -o compute $(LDFLAGS) compute.o inchom.o bezout.o
 
@@ -52,6 +55,7 @@ clean:
 	rm -f onedim onedim.o
 	rm -f increment increment.o
 	rm -f maketorus maketorus.o
+	rm -f makeklein makeklein.o
 	rm -f compute compute.o
 	rm -f createimages createimages.o
 	rm -f inchom.o

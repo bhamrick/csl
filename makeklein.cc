@@ -29,6 +29,26 @@ int main(int argc, char **argv) {
 	for(int i = 0; i<=N; i++) {
 		id[i][N] = id[(N-i+N/2)%N][0];
 	}
+	FILE *schem = fopen("schematic.asy","w");
+	fprintf(schem,"import settings;\noutformat=\"pdf\";\nsize(200);\n");
+	for(int i = 0; i<N+1; i++) {
+		for(int j = 0; j<N+1; j++) {
+			fprintf(schem,"dot((%d,%d));\n",j,-i);
+			fprintf(schem,"label(\"%d\",(%d,%d),NE);\n",id[i][j],j,-i);
+		}
+	}
+	for(int i = 0; i<N; i++) {
+		for(int j = 0; j<N; j++) {
+			fprintf(schem,"draw((%d,%d)--(%d,%d));\n",j,-i,j+1,-i);
+			fprintf(schem,"draw((%d,%d)--(%d,%d));\n",j,-i,j+1,-i-1);
+			fprintf(schem,"draw((%d,%d)--(%d,%d));\n",j,-i,j,-i-1);
+		}
+	}
+	for(int i = 0; i<N; i++) {
+		fprintf(schem,"draw((%d,%d)--(%d,%d));\n",i,-N,i+1,-N);
+		fprintf(schem,"draw((%d,%d)--(%d,%d));\n",N,-i,N,-i-1);
+	}
+	fclose(schem);
 	char *fname = new char[20];
 	sprintf(fname,"klein%d.in",N);
 	FILE *fout = fopen(fname,"w");

@@ -1,3 +1,4 @@
+#include<ctime>
 #include<inchom.hh>
 #include<cstdio>
 #include<cstdlib>
@@ -14,7 +15,10 @@ int main(int argc, char** argv) {
 	}
 	FILE *fin = fopen(argv[1],"r");
 	FILE *output = fopen("output.asy","w");
+	FILE *times = fopen("times.dat","w");
 	double viewx=6, viewy=8, viewz=4;
+	timespec tp1, tp2;
+	int count = 0;
 	fprintf(output,"import settings;\nimport three;\n\noutformat=\"pdf\";\n\nsize(200);\n\ncurrentprojection=orthographic(%lf,%lf,%lf);\n\n",viewx,viewy,viewz);
 	int N[3], dim;
 	fscanf(fin,"%d",&dim);
@@ -29,7 +33,11 @@ int main(int argc, char** argv) {
 		fscanf(fin,"%lf%lf%lf",&coords[i][0],&coords[i][1],&coords[i][2]);
 		vector<int> verts;
 		verts.push_back(i);
+		clock_gettime(CLOCK_REALTIME,&tp1);
 		com->add_simplex(0,verts);
+		clock_gettime(CLOCK_REALTIME,&tp2);
+		count++;
+		fprintf(times,"%d %lld\n",count,((long long)tp2.tv_sec*1000000000ll + tp2.tv_nsec) - ((long long)tp1.tv_sec*1000000000ll + tp1.tv_nsec));
 	}
 	for(int d = 1; d<=dim; d++) {
 		fscanf(fin,"%d",&N[d]);
@@ -41,10 +49,14 @@ int main(int argc, char** argv) {
 				fscanf(fin,"%d",&v);
 				verts.push_back(v);
 			}
+			clock_gettime(CLOCK_REALTIME,&tp1);
 			com->add_simplex(d,verts);
+			clock_gettime(CLOCK_REALTIME,&tp2);
 			if(d == 1) {
 				fprintf(output,"draw((%lf,%lf,%lf)--(%lf,%lf,%lf));\n",coords[verts[0]][0],coords[verts[0]][1],coords[verts[0]][2],coords[verts[1]][0],coords[verts[1]][1],coords[verts[1]][2]);
 			}
+			count++;
+			fprintf(times,"%d %lld\n",count,((long long)tp2.tv_sec*1000000000ll + tp2.tv_nsec) - ((long long)tp1.tv_sec*1000000000ll + tp1.tv_nsec));
 		}
 	}
 	fprintf(output,"save();\n");
